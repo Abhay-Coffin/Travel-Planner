@@ -78,7 +78,7 @@ const Contact = () => {
 
             <div className="contact-info">
               <p>Contact No: +91 7837242596</p>
-              <p>Email: toxicjoker0501@gmail.com</p>
+              <p>Email: sharmaabhay0501@gmail.com</p>
             </div>
 
             {alertVisible && (

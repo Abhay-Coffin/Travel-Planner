@@ -96,11 +96,11 @@ const Footer = () => {
             <ListGroup className="footer__quick-links contact__links">
               <ListGroupItem className="ps-0 border-0">
                 <a
-                  href="mailto:toxicjoker0501@gmail.com"
+                  href="mailto:sharmaabhay0501@gmail.com"
                   className="footer__contact-item"
                 >
                   <FaEnvelope />
-                  <span>toxicjoker0501@gmail.com</span>
+                  <span>sharmaabhay0501@gmail.com</span>
                 </a>
               </ListGroupItem>
 
