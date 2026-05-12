@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      minlength: 6,
     },
 
     photo: {
@@ -39,18 +40,19 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
-  resetOtp: {
-  type: String,
-  default: "",
-},
+    resetOtp: {
+      type: String,
+      default: "",
+    },
 
-resetOtpExpire: {
-  type: Date,
-},
-
+    resetOtpExpire: {
+      type: Date,
+      default: null,
+    },
   },
-  { timestamps: true }
-  
+  {
+    timestamps: true,
+  }
 );
 
 export default mongoose.model("User", userSchema);
