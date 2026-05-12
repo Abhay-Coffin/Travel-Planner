@@ -34,7 +34,7 @@ const Blogs = () => {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/blogs`);
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/blogs`);
 
         let blogData = [];
 
