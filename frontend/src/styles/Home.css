@@ -1,0 +1,366 @@
+.hero__section {
+  padding-top: 120px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.hero__content h1 {
+  font-size: 3.2rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  color: var(--heading-color);
+}
+
+.hero__content h1 .highlight {
+  color: var(--primary-color);
+}
+
+.hero__content p {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  line-height: 2rem;
+}
+
+.hero__subtitle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hero__subtitle img {
+  width: 2.3rem;
+  height: 2.3rem;
+}
+
+.hero__img-box img,
+.hero__img-box video {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 25px;
+  border: 3px solid var(--secondary-color);
+  transition: 0.4s ease;
+}
+
+.hero__img-box img:hover,
+.hero__img-box video:hover {
+  transform: scale(1.03);
+}
+
+.hero__img-box {
+  padding-top: 2rem;
+}
+
+.services__subtitle {
+  font-size: 2.2rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  font-family: var(--subtitle-font-name);
+}
+
+.services__title {
+  font-size: 2.5rem;
+  font-weight: 500;
+}
+
+.featured__tour-title {
+  font-size: 2.3rem;
+  font-weight: 500;
+}
+
+.experience__content h2 {
+  font-size: 2.5rem;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+.experience__content p {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  margin-top: 1rem;
+}
+
+.counter__wrapper {
+  margin-top: 2.5rem;
+}
+
+.counter__box span {
+  width: 70px;
+  height: 70px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 600;
+  border-radius: 15px 5px 15px 5px;
+}
+
+.counter__box h6 {
+  font-size: 1.1rem;
+  margin-top: 0.7rem;
+  color: var(--text-color);
+}
+
+.gallery__title {
+  font-size: 2.3rem;
+  margin-bottom: 2.5rem;
+  margin-top: 1rem;
+}
+
+.masonry__img {
+  transition: 0.3s ease;
+}
+
+.masonry__img:hover {
+  transform: scale(1.02);
+}
+
+.testimonial__title {
+  font-size: 2.3rem;
+  margin-top: 1rem;
+}
+
+.search__section {
+  margin-top: -70px;
+  position: relative;
+  z-index: 10;
+}
+
+.dark-theme .hero__content h1,
+.dark-theme .services__title,
+.dark-theme .featured__tour-title,
+.dark-theme .experience__content h2,
+.dark-theme .gallery__title,
+.dark-theme .testimonial__title {
+  color: #fff;
+}
+
+@media only screen and (max-width: 992px) {
+  .hero__content h1 {
+    font-size: 2.7rem;
+  }
+
+  .hero__img-box {
+    display: none;
+  }
+
+  .hero__video-box {
+    display: block;
+  }
+
+  .services__title,
+  .featured__tour-title,
+  .gallery__title,
+  .testimonial__title,
+  .experience__content h2 {
+    font-size: 2rem;
+  }
+
+  .search__section {
+    margin-top: 20px;
+  }
+}
+
+@media only screen and (max-width: 576px) {
+  .hero__content h1 {
+    font-size: 2rem;
+  }
+
+  .hero__content p {
+    font-size: 1rem;
+  }
+
+  .services__title,
+  .featured__tour-title,
+  .gallery__title,
+  .testimonial__title,
+  .experience__content h2 {
+    font-size: 1.5rem;
+  }
+
+  .hero__img-box {
+    display: none;
+  }
+
+  .search__section {
+    margin-top: 20px;
+  }
+}
+.premium__home-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 760px;
+  display: flex;
+  align-items: center;
+  background: #020617;
+  color: #fff;
+}
+
+.nebula__background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.9;
+}
+
+.premium__home-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(250, 169, 53, 0.18), transparent 35%),
+    linear-gradient(90deg, rgba(2, 6, 23, 0.96), rgba(2, 6, 23, 0.55));
+  z-index: 1;
+}
+
+.hero__container {
+  position: relative;
+  z-index: 2;
+}
+
+.premium__home-hero .hero__content h1 {
+  color: #fff;
+}
+
+.premium__home-hero .hero__content p {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.premium__home-hero .highlight {
+  color: var(--secondary-color);
+}
+
+.premium__home-hero .hero__subtitle img {
+  width: 45px;
+  height: 45px;
+}
+
+.hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.hero__primary-btn,
+.hero__secondary-btn {
+  text-decoration: none;
+  padding: 0.85rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: 0.3s ease;
+}
+
+.hero__primary-btn {
+  background: var(--secondary-color);
+  color: #fff;
+}
+
+.hero__secondary-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.hero__primary-btn:hover,
+.hero__secondary-btn:hover {
+  transform: translateY(-3px);
+  color: #fff;
+}
+
+.hero__nebula-card {
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nebula__glass-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+}
+
+.nebula__glass-card h3 {
+  color: #fff;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.nebula__glass-card p {
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.7;
+}
+
+.nebula__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.nebula__stats div {
+  text-align: center;
+}
+
+.nebula__stats span {
+  color: var(--secondary-color);
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.nebula__stats p {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+
+.hero__search-wrapper {
+  margin-top: 2rem;
+  position: relative;
+  z-index: 4;
+}
+
+.hero__search-wrapper .search__bar {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+@media only screen and (max-width: 992px) {
+  .premium__home-hero {
+    min-height: auto;
+    padding: 5rem 0;
+  }
+
+  .hero__nebula-card {
+    margin-top: 3rem;
+    min-height: 300px;
+  }
+}
+
+@media only screen and (max-width: 576px) {
+  .premium__home-hero {
+    padding: 4rem 0;
+  }
+
+  .nebula__glass-card {
+    padding: 1.4rem;
+  }
+
+  .nebula__stats {
+    flex-direction: column;
+  }
+}

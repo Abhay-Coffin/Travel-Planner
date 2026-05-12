@@ -1,0 +1,69 @@
+:root {
+  --heading-color: #0b2727;
+  --text-color: #6e7074;
+  --primary-color: #ff7e01;
+  --secondary-color: #faa935;
+  --bg-color: #ffffff;
+  --card-bg: #ffffff;
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--heading-color);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: 0.3s ease;
+}
+
+.dark-theme {
+  --heading-color: #ffffff;
+  --text-color: #d1d5db;
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+}
+
+.dark-theme .header,
+.dark-theme .sticky__header,
+.dark-theme .card,
+.dark-theme .service__item,
+.dark-theme .tour__info,
+.dark-theme .tour__reviews,
+.dark-theme .blog__info,
+.dark-theme .blog__reviews,
+.dark-theme .faq__item,
+.dark-theme .booking,
+.dark-theme .login__form,
+.dark-theme .contact-info {
+  background: var(--card-bg) !important;
+  color: #fff !important;
+}
+
+.dark-theme p,
+.dark-theme span,
+.dark-theme h1,
+.dark-theme h2,
+.dark-theme h3,
+.dark-theme h4,
+.dark-theme h5,
+.dark-theme h6,
+.dark-theme a,
+.dark-theme label {
+  color: #fff !important;
+}
+
+.dark-theme input,
+.dark-theme textarea {
+  background: #2a2a2a !important;
+  color: #fff !important;
+}
+
+.dark-theme .newsletter {
+  background: #1e293b !important;
+}
+
+.dark-theme .common__section {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)),
+    url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80")
+      no-repeat center center !important;
+  background-size: cover !important;
+}

@@ -1,0 +1,136 @@
+.footer {
+  padding-top: 70px;
+  padding-bottom: 30px;
+}
+
+.footer .logo img {
+  width: 50%;
+  margin-bottom: 1rem;
+  object-fit: contain;
+}
+
+.footer .logo p {
+  color: var(--text-color);
+  line-height: 1.7rem;
+}
+
+.social__links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.social__links span a {
+  text-decoration: none;
+  color: var(--heading-color);
+  font-size: 1.2rem;
+  transition: 0.3s;
+}
+
+.social__links span a:hover {
+  color: var(--primary-color);
+}
+
+.footer__link-title {
+  color: var(--heading-color);
+  margin-bottom: 1rem;
+}
+
+.footer__quick-links li {
+  margin-bottom: 0.5rem;
+}
+
+.footer__quick-links li a {
+  text-decoration: none;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  transition: 0.3s;
+}
+
+.footer__quick-links li a:hover {
+  color: var(--primary-color);
+}
+
+.footer__quick-links h6 span i {
+  color: #faa935;
+  font-size: 1.1rem;
+}
+
+.copyright {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  margin-top: 2rem;
+}
+
+.copyright a {
+  text-decoration: none;
+  color: var(--secondary-color);
+}
+
+.copyright a:hover {
+  color: var(--primary-color);
+}
+
+@media only screen and (max-width: 768px) {
+  .footer {
+    padding-top: 50px;
+  }
+
+  .footer .logo img {
+    width: 40%;
+  }
+
+  .footer__link-title {
+    margin-top: 1.5rem;
+  }
+
+  .footer__quick-links li a,
+  .copyright {
+    font-size: 0.95rem;
+  }
+}
+
+.footer__contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.footer__contact-item svg {
+  color: var(--secondary-color);
+  font-size: 1.1rem;
+}
+
+.footer__contact-item:hover {
+  color: var(--secondary-color);
+}
+
+.footer__socials {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.footer__socials a {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff3df;
+  color: var(--secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: 0.3s ease;
+  text-decoration: none;
+}
+
+.footer__socials a:hover {
+  background: var(--secondary-color);
+  color: #fff;
+  transform: translateY(-4px);
+}

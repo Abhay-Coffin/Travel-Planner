@@ -1,0 +1,244 @@
+.admin__dashboard {
+  padding: 70px 0;
+  min-height: 80vh;
+}
+
+.admin__header {
+  margin-bottom: 2.5rem;
+}
+
+.admin__header h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--heading-color);
+}
+
+.admin__header p {
+  color: var(--text-color);
+  font-size: 1.1rem;
+}
+
+.admin__stat-card {
+  background: #fff;
+  padding: 1.8rem;
+  border-radius: 1.3rem;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  height: 100%;
+}
+
+.admin__icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.admin__icon i {
+  color: #fff;
+  font-size: 1.7rem;
+}
+
+.admin__stat-card h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--heading-color);
+}
+
+.admin__stat-card p {
+  color: var(--text-color);
+  margin-bottom: 0;
+}
+
+.admin__action-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1.3rem;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  border: 1px solid rgba(250, 169, 53, 0.2);
+}
+
+.admin__action-card h4 {
+  color: var(--heading-color);
+  font-weight: 700;
+}
+
+.admin__action-card p {
+  color: var(--text-color);
+  line-height: 1.7rem;
+}
+
+.admin__action-card button {
+  border: none;
+  background: var(--secondary-color);
+  color: #fff;
+  padding: 0.7rem 1.3rem;
+  border-radius: 0.8rem;
+  font-weight: 600;
+}
+
+.dark-theme .admin__stat-card,
+.dark-theme .admin__action-card {
+  background: #1e1e1e;
+}
+
+@media only screen and (max-width: 576px) {
+  .admin__header h1 {
+    font-size: 1.8rem;
+  }
+}
+
+.admin__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin__tour-img {
+  width: 90px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.admin__form input,
+.admin__form textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.7rem;
+  outline: none;
+}
+
+.admin__form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.admin__form label {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.dark-theme .modal-content {
+  background: #1e1e1e;
+  color: #fff;
+}
+
+.dark-theme .admin__form input,
+.dark-theme .admin__form textarea {
+  background: #2a2a2a;
+  color: #fff;
+  border-color: #444;
+}
+.admin__back-btn {
+  border: none;
+  background: #fff7e8;
+  color: var(--primary-color);
+  padding: 0.6rem 1.1rem;
+  border-radius: 50px;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: 0.3s ease;
+}
+
+.admin__back-btn:hover {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.admin__photo-preview {
+  margin-bottom: 1rem;
+}
+
+.admin__photo-preview img {
+  width: 180px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 0.8rem;
+  border: 2px solid var(--secondary-color);
+}
+
+.dark-theme .admin__back-btn {
+  background: #2a2418;
+}
+
+.admin__form-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 22px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+.admin__form-card label {
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  display: block;
+  color: var(--heading-color);
+}
+
+.admin__form-card input,
+.admin__form-card textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  outline: none;
+  margin-bottom: 1rem;
+}
+
+.admin__form-card textarea {
+  resize: none;
+}
+
+.featured__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.featured__checkbox input {
+  width: auto;
+  margin-bottom: 0;
+}
+
+.featured__checkbox label {
+  margin-bottom: 0;
+}
+
+.admin__submit-btn {
+  border: none !important;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  ) !important;
+  color: #fff !important;
+  padding: 0.8rem 1.5rem !important;
+  border-radius: 14px !important;
+  font-weight: 600 !important;
+}
+
+.blog__preview {
+  margin-bottom: 1rem;
+}
+
+.blog__preview img {
+  width: 100%;
+  max-height: 350px;
+  object-fit: cover;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
