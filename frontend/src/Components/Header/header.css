@@ -433,3 +433,20 @@ canvas {
     width: 88vw;
   }
 }
+
+/* FIX MOBILE MENU BEHIND CONTENT */
+.tw-header {
+  z-index: 9999 !important;
+}
+
+.tw-sheet {
+  z-index: 99999 !important;
+}
+
+.tw-sheet__backdrop {
+  z-index: 99998 !important;
+}
+
+.tw-sheet__panel {
+  z-index: 99999 !important;
+}
