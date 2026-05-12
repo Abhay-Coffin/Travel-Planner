@@ -3,17 +3,17 @@ import Tour from "../models/Tour.js";
 
 // Create a new review
 export const createReview = async (req, res) => {
-  const { username, rating, reviewText } = req.body;
-  const { tourId } = req.params;
-
-  if (!username || !rating || !reviewText) {
-    return res.status(400).json({
-      success: false,
-      message: "Username, rating, and reviewText are required fields",
-    });
-  }
-
   try {
+    const { username, rating, reviewText } = req.body;
+    const { tourId } = req.params;
+
+    if (!username || !rating || !reviewText) {
+      return res.status(400).json({
+        success: false,
+        message: "Username, rating, and review text are required",
+      });
+    }
+
     const tour = await Tour.findById(tourId);
 
     if (!tour) {
@@ -23,14 +23,12 @@ export const createReview = async (req, res) => {
       });
     }
 
-    const newReview = new Review({
+    const newReview = await Review.create({
       tour: tour._id,
       username,
       reviewText,
-      rating,
+      rating: Number(rating),
     });
-
-    await newReview.save();
 
     tour.reviews.push(newReview._id);
     await tour.save();
@@ -41,20 +39,21 @@ export const createReview = async (req, res) => {
       data: newReview,
     });
   } catch (error) {
-    console.error(error.message);
+    console.error("CREATE REVIEW ERROR:", error.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to create review",
+      error: error.message,
     });
   }
 };
 
 // Get all reviews for a tour
 export const getTourReviews = async (req, res) => {
-  const { tourId } = req.params;
-
   try {
+    const { tourId } = req.params;
+
     const tour = await Tour.findById(tourId);
 
     if (!tour) {
@@ -64,7 +63,9 @@ export const getTourReviews = async (req, res) => {
       });
     }
 
-    const reviews = await Review.find({ tour: tourId });
+    const reviews = await Review.find({ tour: tourId }).sort({
+      createdAt: -1,
+    });
 
     res.status(200).json({
       success: true,
@@ -73,20 +74,21 @@ export const getTourReviews = async (req, res) => {
       data: reviews,
     });
   } catch (error) {
-    console.error(error.message);
+    console.error("GET TOUR REVIEWS ERROR:", error.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to get tour reviews",
+      error: error.message,
     });
   }
 };
 
 // Delete a review
 export const deleteReview = async (req, res) => {
-  const { reviewId } = req.params;
-
   try {
+    const { reviewId } = req.params;
+
     const review = await Review.findById(reviewId);
 
     if (!review) {
@@ -96,17 +98,9 @@ export const deleteReview = async (req, res) => {
       });
     }
 
-    const tour = await Tour.findById(review.tour);
-
-    if (!tour) {
-      return res.status(404).json({
-        success: false,
-        message: "Tour not found",
-      });
-    }
-
-    tour.reviews.pull(reviewId);
-    await tour.save();
+    await Tour.findByIdAndUpdate(review.tour, {
+      $pull: { reviews: reviewId },
+    });
 
     await Review.findByIdAndDelete(reviewId);
 
@@ -115,11 +109,12 @@ export const deleteReview = async (req, res) => {
       message: "Review deleted successfully",
     });
   } catch (error) {
-    console.error(error.message);
+    console.error("DELETE REVIEW ERROR:", error.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to delete review",
+      error: error.message,
     });
   }
 };

@@ -8,29 +8,31 @@ export const createTour = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Successfully created",
+      message: "Tour created successfully",
       data: savedTour,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("CREATE TOUR ERROR:", err.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to create tour",
+      error: err.message,
     });
   }
 };
 
 // Update tour
 export const updateTour = async (req, res) => {
-  const id = req.params.id;
-
   try {
     const updatedTour = await Tour.findByIdAndUpdate(
-      id,
+      req.params.id,
       { $set: req.body },
       { new: true }
-    ).populate("reviews");
+    ).populate({
+      path: "reviews",
+      options: { sort: { createdAt: -1 } },
+    });
 
     if (!updatedTour) {
       return res.status(404).json({
@@ -45,21 +47,20 @@ export const updateTour = async (req, res) => {
       data: updatedTour,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("UPDATE TOUR ERROR:", err.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to update tour",
+      error: err.message,
     });
   }
 };
 
 // Delete tour
 export const deleteTour = async (req, res) => {
-  const id = req.params.id;
-
   try {
-    const deletedTour = await Tour.findByIdAndDelete(id);
+    const deletedTour = await Tour.findByIdAndDelete(req.params.id);
 
     if (!deletedTour) {
       return res.status(404).json({
@@ -73,21 +74,20 @@ export const deleteTour = async (req, res) => {
       message: "Tour deleted successfully",
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("DELETE TOUR ERROR:", err.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to delete tour",
+      error: err.message,
     });
   }
 };
 
 // Get single tour
 export const getSingleTour = async (req, res) => {
-  const id = req.params.id;
-
   try {
-    const tour = await Tour.findById(id).populate({
+    const tour = await Tour.findById(req.params.id).populate({
       path: "reviews",
       options: { sort: { createdAt: -1 } },
     });
@@ -105,11 +105,12 @@ export const getSingleTour = async (req, res) => {
       data: tour,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("GET SINGLE TOUR ERROR:", err.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to get the tour",
+      error: err.message,
     });
   }
 };
@@ -117,20 +118,27 @@ export const getSingleTour = async (req, res) => {
 // Get all tours
 export const getAllTour = async (req, res) => {
   try {
-    const tours = await Tour.find().populate("reviews");
+    const tours = await Tour.find()
+      .populate({
+        path: "reviews",
+        options: { sort: { createdAt: -1 } },
+      })
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: tours.length,
-      message: "Tours retrieved successfully",
+      message:
+        tours.length > 0 ? "Tours retrieved successfully" : "No tours found",
       data: tours,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("GET ALL TOURS ERROR:", err.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to get tours",
+      error: err.message,
     });
   }
 };
@@ -138,20 +146,29 @@ export const getAllTour = async (req, res) => {
 // Get featured tours
 export const getFeaturedTour = async (req, res) => {
   try {
-    const tours = await Tour.find({ featured: true }).populate("reviews");
+    const tours = await Tour.find({ featured: true })
+      .populate({
+        path: "reviews",
+        options: { sort: { createdAt: -1 } },
+      })
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
       count: tours.length,
-      message: "Featured tours retrieved successfully",
+      message:
+        tours.length > 0
+          ? "Featured tours retrieved successfully"
+          : "No featured tours found",
       data: tours,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("GET FEATURED TOURS ERROR:", err.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to get featured tours",
+      error: err.message,
     });
   }
 };
@@ -167,11 +184,12 @@ export const getTourCount = async (req, res) => {
       data: tourCount,
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("GET TOUR COUNT ERROR:", err.message);
 
     res.status(500).json({
       success: false,
       message: "Failed to get tours count",
+      error: err.message,
     });
   }
 };
