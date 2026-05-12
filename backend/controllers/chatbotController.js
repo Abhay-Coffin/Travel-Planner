@@ -1,4 +1,9 @@
-import axios from "axios";
+import OpenAI from "openai";
+
+const groqClient = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 export const chatWithAssistant = async (req, res) => {
   const { message } = req.body;
@@ -11,10 +16,10 @@ export const chatWithAssistant = async (req, res) => {
       });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return res.status(500).json({
         success: false,
-        message: "Gemini API key missing",
+        message: "Groq API key missing in backend environment variables",
       });
     }
 
@@ -38,25 +43,25 @@ Give helpful, practical, friendly travel advice.
 Keep answers clear and structured.
 `;
 
-    const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
-      {
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY,
+    const completion = await groqClient.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful AI travel assistant for a travel planning website. Always answer in clear English.",
         },
-      }
-    );
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 900,
+    });
 
     const reply =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      completion.choices?.[0]?.message?.content ||
       "Sorry, I could not generate a response.";
 
     res.status(200).json({
@@ -64,10 +69,12 @@ Keep answers clear and structured.
       reply,
     });
   } catch (error) {
+    console.error("CHATBOT ERROR:", error);
+
     res.status(500).json({
       success: false,
       message: "Chatbot failed",
-      error: error.response?.data?.error?.message || error.message,
+      error: error.message,
     });
   }
 };

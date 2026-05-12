@@ -11,7 +11,6 @@ import { BASE_URL } from "../utils/config";
 
 const SearchBar = () => {
   const locationRef = useRef("");
-  const distanceRef = useRef("");
   const maxGroupSizeRef = useRef("");
 
   const navigate = useNavigate();
@@ -20,17 +19,15 @@ const SearchBar = () => {
     e.preventDefault();
 
     const location = locationRef.current.value.trim();
-    const distance = distanceRef.current.value;
     const maxGroupSize = maxGroupSizeRef.current.value;
 
     const searchParams = new URLSearchParams();
 
     if (location) searchParams.append("city", location);
-    if (distance) searchParams.append("distance", distance);
     if (maxGroupSize) searchParams.append("maxGroupSize", maxGroupSize);
 
-    if (!location && !distance && !maxGroupSize) {
-      toast.error("Please enter at least one search field.");
+    if (!location && !maxGroupSize) {
+      toast.error("Please enter location or max people.");
       return;
     }
 
@@ -78,23 +75,6 @@ const SearchBar = () => {
             </div>
           </FormGroup>
 
-          <FormGroup className="form__group form__group-first">
-            <span>
-              <i className="ri-map-pin-time-line" />
-            </span>
-
-            <div className="search__field">
-              <h6>Distance</h6>
-
-              <input
-                type="number"
-                min="0"
-                placeholder="Distance km"
-                ref={distanceRef}
-              />
-            </div>
-          </FormGroup>
-
           <FormGroup className="form__group">
             <span>
               <i className="ri-group-line" />
@@ -106,7 +86,7 @@ const SearchBar = () => {
               <input
                 type="number"
                 min="1"
-                placeholder="0"
+                placeholder="Number of people"
                 ref={maxGroupSizeRef}
               />
             </div>

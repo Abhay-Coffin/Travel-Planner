@@ -187,3 +187,40 @@
     border-radius: 12px;
   }
 }
+
+.search__form {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.search__bar {
+  width: 100%;
+  max-width: 1000px;
+  margin-inline: auto;
+}
+
+.form__group {
+  flex: 1;
+}
+
+@media only screen and (max-width: 768px) {
+  .search__form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form__group {
+    width: 100%;
+  }
+
+  .form__group-first {
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 1rem;
+  }
+
+  .search__icon {
+    width: 100%;
+  }
+}

@@ -53,7 +53,7 @@ const Chatbot = () => {
 
     const finalMessage = quickText || message;
 
-    if (!finalMessage.trim()) return;
+    if (!finalMessage.trim() || loading) return;
 
     const userMessage = {
       sender: "user",
@@ -73,15 +73,22 @@ const Chatbot = () => {
         ...prev,
         {
           sender: "bot",
-          text: res.data?.reply || "Sorry, I could not reply.",
+          text:
+            res.data?.reply ||
+            res.data?.data ||
+            "Sorry, I could not generate a reply.",
         },
       ]);
     } catch (error) {
+      console.error("CHATBOT ERROR:", error);
+
       setMessages((prev) => [
         ...prev,
         {
           sender: "bot",
-          text: "Sorry, chatbot is not responding right now. Please check backend and Gemini API key.",
+          text:
+            error.response?.data?.message ||
+            "Sorry, the chatbot is not responding right now. Please check the backend server and Groq API key.",
         },
       ]);
     } finally {
@@ -106,6 +113,7 @@ const Chatbot = () => {
         onClick={() => setOpen((prev) => !prev)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
+        aria-label="Open chatbot"
       >
         {open ? (
           <i className="ri-close-line"></i>
@@ -133,11 +141,15 @@ const Chatbot = () => {
               </div>
 
               <div className="chatbot__header-actions">
-                <button onClick={openAiPlanner} title="Open AI Planner">
+                <button
+                  type="button"
+                  onClick={openAiPlanner}
+                  title="Open AI Planner"
+                >
                   <i className="ri-map-2-line"></i>
                 </button>
 
-                <button onClick={clearChat} title="Clear chat">
+                <button type="button" onClick={clearChat} title="Clear chat">
                   <i className="ri-delete-bin-line"></i>
                 </button>
               </div>
@@ -146,6 +158,7 @@ const Chatbot = () => {
             <div className="chatbot__quick">
               {quickQuestions.map((item, index) => (
                 <button
+                  type="button"
                   key={index}
                   onClick={() => sendMessage(null, item)}
                   disabled={loading}

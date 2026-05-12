@@ -9,7 +9,7 @@
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   color: #fff;
   font-size: 1.7rem;
-  z-index: 9999;
+  z-index: 99999;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
 }
 
@@ -22,7 +22,7 @@
   background: #fff;
   border-radius: 1.4rem;
   box-shadow: 0 18px 55px rgba(0, 0, 0, 0.2);
-  z-index: 9999;
+  z-index: 99999;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -40,6 +40,7 @@
 .chatbot__header h5 {
   margin-bottom: 0.2rem;
   color: #fff;
+  font-size: 1rem;
 }
 
 .chatbot__header p {
@@ -80,6 +81,7 @@
   overflow-x: auto;
   background: #fff;
   border-bottom: 1px solid #eee;
+  scrollbar-width: thin;
 }
 
 .chatbot__quick button {
@@ -160,7 +162,9 @@
 }
 
 @keyframes typing {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: translateY(0);
     opacity: 0.4;
   }
@@ -185,6 +189,7 @@
   background: #f1f3f5;
   border-radius: 50px;
   padding: 0.8rem 1rem;
+  font-size: 0.95rem;
 }
 
 .chatbot__form button {
@@ -230,15 +235,69 @@
   background: #2a2418;
 }
 
-@media only screen and (max-width: 576px) {
-  .chatbot__box {
-    width: calc(100% - 30px);
-    height: 560px;
-    right: 15px;
-    bottom: 145px;
-  }
+/* MOBILE CHATBOT FIX */
 
+@media only screen and (max-width: 768px) {
   .chatbot__toggle {
     right: 18px;
+    bottom: 75px;
+    width: 56px;
+    height: 56px;
+    z-index: 999999;
+  }
+
+  .chatbot__box {
+    top: 85px;
+    right: 12px;
+    left: 12px;
+    bottom: 90px;
+    width: auto;
+    height: auto;
+    max-height: calc(100vh - 175px);
+    border-radius: 1.2rem;
+    z-index: 999999;
+  }
+
+  .chatbot__header {
+    padding: 0.85rem 1rem;
+  }
+
+  .chatbot__quick {
+    padding: 0.65rem;
+  }
+
+  .chatbot__messages {
+    padding: 0.8rem;
+  }
+
+  .chatbot__message p {
+    max-width: 90%;
+    font-size: 0.88rem;
+  }
+
+  .chatbot__form {
+    padding: 0.7rem;
+  }
+
+  .chatbot__form input {
+    font-size: 0.9rem;
+  }
+}
+
+@media only screen and (max-width: 420px) {
+  .chatbot__box {
+    top: 78px;
+    right: 8px;
+    left: 8px;
+    bottom: 85px;
+    max-height: calc(100vh - 165px);
+  }
+
+  .chatbot__header h5 {
+    font-size: 0.95rem;
+  }
+
+  .chatbot__quick button {
+    font-size: 0.75rem;
   }
 }
