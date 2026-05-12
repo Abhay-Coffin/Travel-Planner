@@ -1,2 +1,3 @@
 export const BASE_URL =
-  import.meta.env.VITE_BASE_URL || "http://${import.meta.env.VITE_API_URL}/api/.../api/v1";
+  import.meta.env.VITE_BASE_URL ||
+  "https://travel-planner-backend-b86n.onrender.com/api/v1";
