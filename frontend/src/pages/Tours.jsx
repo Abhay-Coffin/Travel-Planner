@@ -7,7 +7,7 @@ import SearchBar from "../Shared/SearchBar";
 import TourCard from "../Shared/TourCard";
 import Newsletter from "../Shared/Newsletter";
 import Loader from "../Components/Loader/Loader";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 import useFetch from "../hooks/useFetch";
 
