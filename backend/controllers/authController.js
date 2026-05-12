@@ -6,6 +6,39 @@ import { OAuth2Client } from "google-auth-library";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const createToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      role: user.role || "user",
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "15d",
+    }
+  );
+};
+
+const sendTokenResponse = (res, user, message = "Login successful") => {
+  const token = createToken(user);
+  const { password, resetOtp, resetOtpExpire, ...userData } = user._doc;
+
+  return res
+    .cookie("accessToken", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 15 * 24 * 60 * 60 * 1000,
+    })
+    .status(200)
+    .json({
+      success: true,
+      message,
+      token,
+      data: userData,
+    });
+};
+
 export const googleLogin = async (req, res) => {
   try {
     const { credential } = req.body;
@@ -17,58 +50,39 @@ export const googleLogin = async (req, res) => {
       });
     }
 
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({
+        success: false,
+        message: "Google Client ID missing on server",
+      });
+    }
+
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-
     const { email, name, picture, sub } = payload;
 
     let user = await User.findOne({ email });
 
     if (!user) {
-      user = new User({
-        username: name,
-        fullName: name,
-        email,
-        password: `google-${sub}`,
-        photo: picture,
-      });
+      const safeUsername = `${name || "google_user"}_${sub.slice(0, 6)}`
+        .replace(/\s+/g, "_")
+        .toLowerCase();
 
-      await user.save();
+      user = await User.create({
+        username: safeUsername,
+        fullName: name || "Google User",
+        email,
+        password: await bcrypt.hash(`google-${sub}`, 10),
+        photo: picture || "",
+        role: "user",
+      });
     }
 
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role || "user",
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "15d",
-      }
-    );
-
-    const { password, ...userData } = user._doc;
-
-    res
-      .cookie("accessToken", token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-      })
-      .status(200)
-      .json({
-        success: true,
-        message: "Google login successful",
-        token,
-        data: {
-          ...userData,
-          photo: picture || user.photo,
-        },
-      });
+    return sendTokenResponse(res, user, "Google login successful");
   } catch (error) {
     console.log("GOOGLE LOGIN ERROR:", error);
 
@@ -91,7 +105,10 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const existingEmail = await User.findOne({ email });
+    const existingEmail = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
     if (existingEmail) {
       return res.status(400).json({
         success: false,
@@ -99,7 +116,10 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const existingUsername = await User.findOne({ username });
+    const existingUsername = await User.findOne({
+      username: username.trim(),
+    });
+
     if (existingUsername) {
       return res.status(400).json({
         success: false,
@@ -109,23 +129,21 @@ export const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({
-      username,
-      fullName: fullName || username,
-      email,
+    await User.create({
+      username: username.trim(),
+      fullName: fullName?.trim() || username.trim(),
+      email: email.toLowerCase().trim(),
       password: hashedPassword,
       photo: photo || "",
       role: "user",
     });
-
-    await newUser.save();
 
     res.status(201).json({
       success: true,
       message: "User registered successfully",
     });
   } catch (error) {
-    console.error("Register error:", error);
+    console.error("REGISTER ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -146,7 +164,16 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        success: false,
+        message: "JWT_SECRET missing on server",
+      });
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
 
     if (!user) {
       return res.status(404).json({
@@ -164,29 +191,9 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        _id: user._id,
-        role: user.role,
-      },
-      process.env.SECRET,
-      { expiresIn: "15d" }
-    );
-
-    res.status(200).json({
-      success: true,
-      id: user._id,
-      username: user.username,
-      fullName: user.fullName,
-      email: user.email,
-      photo: user.photo,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-      token,
-    });
+    return sendTokenResponse(res, user, "Login successful");
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("LOGIN ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -196,21 +203,25 @@ export const loginUser = async (req, res) => {
   }
 };
 
-export default {
-  registerUser,
-  loginUser,
-};
-
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
 
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found with this email",
+      });
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({
+        success: false,
+        message: "Email service is not configured",
       });
     }
 
@@ -247,7 +258,7 @@ export const forgotPassword = async (req, res) => {
       message: "OTP sent successfully to your email",
     });
   } catch (error) {
-    console.log("Forgot password error:", error);
+    console.log("FORGOT PASSWORD ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -256,12 +267,13 @@ export const forgotPassword = async (req, res) => {
     });
   }
 };
+
 export const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
 
     const user = await User.findOne({
-      email,
+      email: email.toLowerCase().trim(),
       resetOtp: otp,
       resetOtpExpire: { $gt: Date.now() },
     });
@@ -273,10 +285,7 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(newPassword, salt);
-
-    user.password = hash;
+    user.password = await bcrypt.hash(newPassword, 10);
     user.resetOtp = "";
     user.resetOtpExpire = undefined;
 
@@ -293,4 +302,12 @@ export const resetPassword = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+export default {
+  registerUser,
+  loginUser,
+  googleLogin,
+  forgotPassword,
+  resetPassword,
 };
