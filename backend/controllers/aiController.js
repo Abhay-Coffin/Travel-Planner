@@ -1,4 +1,9 @@
-import axios from "axios";
+import OpenAI from "openai";
+
+const groqClient = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 export const generateItinerary = async (req, res) => {
   const { destination, days, budget, travelers, interests } = req.body;
@@ -12,10 +17,10 @@ export const generateItinerary = async (req, res) => {
       });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return res.status(500).json({
         success: false,
-        message: "Gemini API key is missing in backend .env",
+        message: "Groq API key is missing in backend environment variables",
       });
     }
 
@@ -24,7 +29,7 @@ Create a detailed travel itinerary.
 
 Destination: ${destination}
 Number of days: ${days}
-Budget: ${budget}
+Budget: ₹${budget}
 Travelers: ${travelers}
 Interests: ${interests}
 
@@ -45,14 +50,7 @@ Evening:
 Food Suggestions:
 Estimated Cost:
 
-Day 2:
-Morning:
-Afternoon:
-Evening:
-Food Suggestions:
-Estimated Cost:
-
-Continue for all days.
+Continue for all ${days} days.
 
 Also include:
 - Best places to visit
@@ -64,30 +62,25 @@ Also include:
 Keep the answer practical, detailed, and easy to read.
 `;
 
-    const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY,
+    const completion = await groqClient.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a professional travel planner. Create practical, budget-friendly, day-wise itineraries.",
         },
-      }
-    );
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 1800,
+    });
 
     const itinerary =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No itinerary generated.";
+      completion.choices?.[0]?.message?.content || "No itinerary generated.";
 
     res.status(200).json({
       success: true,
@@ -95,12 +88,12 @@ Keep the answer practical, detailed, and easy to read.
       data: itinerary,
     });
   } catch (error) {
-    console.error("AI itinerary error:", error.response?.data || error.message);
+    console.error("AI itinerary error:", error);
 
     res.status(500).json({
       success: false,
       message: "Failed to generate itinerary",
-      error: error.response?.data?.error?.message || error.message,
+      error: error.message,
     });
   }
 };
