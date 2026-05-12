@@ -3,35 +3,35 @@ import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
-import Home from "../Pages/Home";
-import Tours from "../Pages/Tours";
-import TourDetails from "../Pages/TourDetails";
-import Login from "../Pages/Login";
-import Register from "../Pages/Register";
-import SearchResultList from "../Pages/SearchResultList";
-import ThankYou from "../Pages/ThankYou";
-import About from "../Pages/About";
+import Home from "../pages/Home";
+import Tours from "../pages/Tours";
+import TourDetails from "../pages/TourDetails";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import SearchResultList from "../pages/SearchResultList";
+import ThankYou from "../pages/ThankYou";
+import About from "../pages/About";
 import FAQ from "../Shared/FAQ";
-import Contact from "../Pages/Contact";
-import Gallery from "../Pages/Gallery";
-import PageNotFound from "../Pages/PageNotFound";
-import Blogs from "../Pages/Blogs";
-import BlogDetails from "../Pages/BlogDetails";
-import Profile from "../Pages/Profile";
-import Wishlist from "../Pages/Wishlist";
+import Contact from "../pages/Contact";
+import Gallery from "../pages/Gallery";
+import PageNotFound from "../pages/PageNotFound";
+import Blogs from "../pages/Blogs";
+import BlogDetails from "../pages/BlogDetails";
+import Profile from "../pages/Profile";
+import Wishlist from "../pages/Wishlist";
 
 import ScrollToTop from "../utils/scrollToTop";
-import AiPlanner from "../Pages/AiPlanner";
-import SavedItineraries from "../Pages/SavedItineraries";
+import AiPlanner from "../pages/AiPlanner";
+import SavedItineraries from "../pages/SavedItineraries";
 
-import AdminDashboard from "../Pages/AdminDashboard";
-import AdminTours from "../Pages/AdminTours";
-import AdminBlogs from "../Pages/AdminBlogs";
-import AdminBookings from "../Pages/AdminBookings";
-import MyBookings from "../Pages/MyBookings";
+import AdminDashboard from "../pages/AdminDashboard";
+import AdminTours from "../pages/AdminTours";
+import AdminBlogs from "../pages/AdminBlogs";
+import AdminBookings from "../pages/AdminBookings";
+import MyBookings from "../pages/MyBookings";
 
-import ForgotPassword from "../Pages/ForgotPassword";
-import ResetPassword from "../Pages/ResetPassword";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 
 const pageVariants = {
   initial: {
