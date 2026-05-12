@@ -31,10 +31,7 @@ const About = () => {
                 </h1>
 
                 <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Phasellus tempus massa vitae elit consectetur, ut convallis
-                  massa ultricies. Duis hendrerit turpis quis tincidunt
-                  lobortis. Nullam vel faucibus mauris.
+                  Planning our trip with this website was seamless — everything from booking to itineraries was clear and stress-free. Highly recommend for hassle-free travel planning!
                 </p>
               </div>
             </Col>

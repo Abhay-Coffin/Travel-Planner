@@ -38,8 +38,7 @@ const Testimonials = () => {
       {testimonialsData.map((item, index) => (
         <div className="testimonials py-4 px-3" key={index}>
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-            Phasellus tempus massa vitae elit consectetur.
+            Planning our trip with this website was seamless — everything from booking to itineraries was clear and stress-free. Highly recommend for hassle-free travel planning!
           </p>
 
           <div className="d-flex align-items-center gap-4 mt-3">
