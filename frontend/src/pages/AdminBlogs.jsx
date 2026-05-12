@@ -11,7 +11,7 @@ import {
 import { toast } from "react-toastify";
 import axios from "axios";
 
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 import { BASE_URL } from "../utils/config";
 
 import "../styles/AdminDashboard.css";

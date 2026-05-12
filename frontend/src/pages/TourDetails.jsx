@@ -24,7 +24,7 @@ import Booking from "../Components/Booking/Booking";
 import Newsletter from "../Shared/Newsletter";
 import WeatherCard from "../Components/WeatherCard/WeatherCard";
 import TourMap from "../Components/TourMap/TourMap";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 import useFetch from "../hooks/useFetch";
 import { BASE_URL } from "../utils/config";

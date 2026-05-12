@@ -4,7 +4,7 @@ import { Container, Row, Col } from "reactstrap";
 import CommonSection from "../Shared/CommonSection";
 import TourCard from "../Shared/TourCard";
 import Newsletter from "../Shared/Newsletter";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 import { WishlistContext } from "../context/WishlistContext.jsx";
 

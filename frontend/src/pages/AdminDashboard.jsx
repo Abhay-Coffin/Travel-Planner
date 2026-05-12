@@ -3,7 +3,7 @@ import { Container, Row, Col } from "reactstrap";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 import "../styles/AdminDashboard.css";
 

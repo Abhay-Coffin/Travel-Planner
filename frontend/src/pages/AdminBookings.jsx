@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { BASE_URL } from "../utils/config";
 import "../styles/AdminDashboard.css";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 const AdminBookings = () => {
   const navigate = useNavigate();

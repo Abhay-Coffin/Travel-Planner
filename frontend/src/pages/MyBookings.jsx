@@ -4,7 +4,7 @@ import axios from "axios";
 
 import CommonSection from "../Shared/CommonSection";
 import Newsletter from "../Shared/Newsletter";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 import Loader from "../Components/Loader/Loader";
 
 import { AuthContext } from "../context/AuthContext";

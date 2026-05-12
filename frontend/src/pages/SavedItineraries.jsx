@@ -3,7 +3,7 @@ import { Container, Row, Col, Button } from "reactstrap";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Newsletter from "../Shared/Newsletter";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 import "../styles/SavedItineraries.css";
 

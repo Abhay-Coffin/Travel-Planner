@@ -3,7 +3,7 @@ import { Container, Button } from "reactstrap";
 import { toast } from "react-toastify";
 
 import { AuthContext } from "../context/AuthContext";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 import "../styles/Profile.css";
 

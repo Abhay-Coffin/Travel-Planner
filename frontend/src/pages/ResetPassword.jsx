@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 import { BASE_URL } from "../utils/config";
 
 import "../styles/AuthPages.css";

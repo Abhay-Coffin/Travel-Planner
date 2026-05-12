@@ -7,7 +7,7 @@ import CommonSection from "../Shared/CommonSection";
 import Newsletter from "../Shared/Newsletter";
 import BlogCard from "../Shared/BlogCard";
 import Loader from "../Components/Loader/Loader";
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 
 import { BASE_URL } from "../utils/config";
 
