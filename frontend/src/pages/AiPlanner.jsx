@@ -82,7 +82,39 @@ const AiPlanner = () => {
   };
 
   const convertCurrency = async (amount, fromCurrency, toCurrency) => {
-    if (fromCurrency === toCurrency) {
+    try {
+      if (fromCurrency === toCurrency) {
+        return {
+          amount: Number(amount),
+          from: fromCurrency,
+          to: toCurrency,
+          rate: 1,
+        };
+      }
+
+      const response = await axios.get(
+        `https://api.exchangerate.host/convert?from=${fromCurrency}&to=${toCurrency}&amount=${amount}`
+      );
+
+      console.log("Currency API Response:", response.data);
+
+      const convertedAmount = response.data?.result;
+
+      if (!convertedAmount || isNaN(convertedAmount)) {
+        throw new Error("Currency conversion failed.");
+      }
+
+      return {
+        amount: convertedAmount,
+        from: fromCurrency,
+        to: toCurrency,
+        rate: convertedAmount / Number(amount),
+      };
+    } catch (error) {
+      console.error("Currency conversion error:", error);
+
+      toast.error("Currency conversion failed. Using original budget.");
+
       return {
         amount: Number(amount),
         from: fromCurrency,
@@ -90,23 +122,6 @@ const AiPlanner = () => {
         rate: 1,
       };
     }
-
-    const response = await axios.get(
-      `https://api.frankfurter.dev/v2/rates?base=${fromCurrency}&quotes=${toCurrency}`
-    );
-
-    const rate = response.data?.rates?.[toCurrency];
-
-    if (!rate) {
-      throw new Error("Currency conversion failed.");
-    }
-
-    return {
-      amount: Number(amount) * rate,
-      from: fromCurrency,
-      to: toCurrency,
-      rate,
-    };
   };
 
   const generateItinerary = async (e) => {
@@ -118,7 +133,9 @@ const AiPlanner = () => {
     setConvertedBudget(null);
 
     try {
-      const destinationCurrency = getDestinationCurrency(formData.destination);
+      const destinationCurrency = getDestinationCurrency(
+        formData.destination
+      );
 
       const conversion = await convertCurrency(
         formData.budget,
@@ -136,15 +153,25 @@ const AiPlanner = () => {
         budget: `${conversion.amount.toFixed(2)} ${conversion.to}`,
       };
 
-      const response = await axios.post(`${BASE_URL}/ai/itinerary`, payload);
+      const response = await axios.post(
+        `${BASE_URL}/ai/itinerary`,
+        payload
+      );
 
       setItinerary(response.data?.data || "No itinerary generated.");
+
+      toast.success("AI itinerary generated!");
     } catch (error) {
-      setError(
+      console.error(error);
+
+      const errorMessage =
         error.response?.data?.message ||
-          error.message ||
-          "Failed to generate itinerary."
-      );
+        error.message ||
+        "Failed to generate itinerary.";
+
+      setError(errorMessage);
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -153,7 +180,8 @@ const AiPlanner = () => {
   const saveItinerary = () => {
     if (!itinerary) return;
 
-    const savedTrips = JSON.parse(localStorage.getItem("savedItineraries")) || [];
+    const savedTrips =
+      JSON.parse(localStorage.getItem("savedItineraries")) || [];
 
     const newTrip = {
       destination: formData.destination,
@@ -179,6 +207,7 @@ const AiPlanner = () => {
     if (!itinerary) return;
 
     await navigator.clipboard.writeText(itinerary);
+
     toast.success("Copied to clipboard!");
   };
 
@@ -204,13 +233,17 @@ ${itinerary}`;
     });
 
     const url = URL.createObjectURL(blob);
+
     const link = document.createElement("a");
 
     link.href = url;
     link.download = `${formData.destination || "travel"}-itinerary.txt`;
+
     link.click();
 
     URL.revokeObjectURL(url);
+
+    toast.success("Itinerary downloaded!");
   };
 
   return (
@@ -362,14 +395,16 @@ ${itinerary}`;
                     </strong>{" "}
                     is approximately{" "}
                     <strong>
-                      {convertedBudget.amount.toFixed(2)} {convertedBudget.to}
+                      {convertedBudget.amount.toFixed(2)}{" "}
+                      {convertedBudget.to}
                     </strong>{" "}
                     for {formData.destination}.
                   </p>
 
                   <small>
                     Exchange rate used: 1 {convertedBudget.from} ={" "}
-                    {convertedBudget.rate.toFixed(4)} {convertedBudget.to}
+                    {convertedBudget.rate.toFixed(4)}{" "}
+                    {convertedBudget.to}
                   </small>
                 </div>
               </Col>
