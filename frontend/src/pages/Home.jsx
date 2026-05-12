@@ -12,7 +12,7 @@ import Newsletter from "../Shared/Newsletter";
 import ServiceList from "../Services/ServiceList";
 import FeaturedToursList from "../Components/FeaturedTours/FeaturedToursList";
 import MasonryImagesGallery from "../Components/Image-gallery/MasonryImagesGallery";
-import testimonials from "../Components/Testimonials/testimonials";
+import Testimonials from "../Components/Testimonials/testimonials";
 import FeaturedBlogsList from "../Components/FeaturedBlogs/FeaturedBlogsList";
 import NebulaBackground from "../Components/AnimatedBackground/NebulaBackground";
 
