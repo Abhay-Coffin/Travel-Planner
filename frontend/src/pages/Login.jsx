@@ -9,7 +9,7 @@ import "../styles/Login.css";
 import { AuthContext } from "../context/AuthContext";
 import { BASE_URL } from "../utils/config";
 
-import BackButton from "../Components/Common/BackButton";
+import BackButton from "../Components/common/BackButton";
 import LoginVortexBackground from "../Components/AnimatedBackground/LoginVortexBackground";
 
 const loginImg = "https://cdn-icons-png.flaticon.com/512/201/201623.png";
