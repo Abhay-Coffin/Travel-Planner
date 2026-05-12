@@ -4,6 +4,7 @@ import "./searchbar.css";
 import { Col, Form, FormGroup } from "reactstrap";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 import axios from "axios";
 import { BASE_URL } from "../utils/config";
@@ -29,7 +30,7 @@ const SearchBar = () => {
     if (maxGroupSize) searchParams.append("maxGroupSize", maxGroupSize);
 
     if (!location && !distance && !maxGroupSize) {
-      alert("Please enter at least one search field.");
+      toast.error("Please enter at least one search field.");
       return;
     }
 
@@ -44,14 +45,14 @@ const SearchBar = () => {
         },
       });
     } catch (error) {
-      alert(
+      toast.error(
         error.response?.data?.message || "Failed to fetch search results."
       );
     }
   };
 
   return (
-    <Col lg="12">
+    <Col lg="12" className="search__col">
       <motion.div
         className="search__bar"
         initial={{ opacity: 0, y: 35 }}
@@ -60,16 +61,13 @@ const SearchBar = () => {
         transition={{ duration: 0.45 }}
         viewport={{ once: true }}
       >
-        <Form
-          className="d-flex align-items-center gap-4"
-          onSubmit={searchHandler}
-        >
-          <FormGroup className="d-flex gap-3 form__group form__group-first">
+        <Form className="search__form" onSubmit={searchHandler}>
+          <FormGroup className="form__group form__group-first">
             <span>
               <i className="ri-map-pin-line" />
             </span>
 
-            <div>
+            <div className="search__field">
               <h6>Location</h6>
 
               <input
@@ -80,12 +78,12 @@ const SearchBar = () => {
             </div>
           </FormGroup>
 
-          <FormGroup className="d-flex gap-3 form__group form__group-first">
+          <FormGroup className="form__group form__group-first">
             <span>
               <i className="ri-map-pin-time-line" />
             </span>
 
-            <div>
+            <div className="search__field">
               <h6>Distance</h6>
 
               <input
@@ -97,12 +95,12 @@ const SearchBar = () => {
             </div>
           </FormGroup>
 
-          <FormGroup className="d-flex gap-3 form__group">
+          <FormGroup className="form__group">
             <span>
               <i className="ri-group-line" />
             </span>
 
-            <div>
+            <div className="search__field">
               <h6>Max People</h6>
 
               <input

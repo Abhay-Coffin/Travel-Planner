@@ -1,25 +1,59 @@
+.search__col {
+  width: 100%;
+  overflow: hidden;
+}
+
 .search__bar {
-  padding: 0.7rem 1.2rem;
-  border-radius: 50px;
-  box-shadow: rgba(17, 12, 46, 0.15) 0px 20px 60px 0px;
-  width: max-content;
-  margin-top: 50px;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 1rem 1.4rem;
+  border-radius: 24px;
+  box-shadow: rgba(17, 12, 46, 0.12) 0px 20px 50px 0px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 50px auto 0;
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.search__form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+}
+
+.form__group {
+  display: flex !important;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.search__field {
+  width: 100%;
+  min-width: 0;
 }
 
 .search__bar .form__group span {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   color: #ee6e6e;
+  flex-shrink: 0;
 }
 
 .search__bar .form__group input {
   border: none;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--heading-color);
   font-weight: 500;
   background: transparent;
+  width: 100%;
+}
+
+.search__bar .form__group input::placeholder {
+  color: #888;
 }
 
 .search__bar .form__group input:focus {
@@ -27,8 +61,10 @@
 }
 
 .search__bar .form__group h6 {
-  margin-bottom: 0;
-  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+  color: var(--heading-color);
+  font-size: 1rem;
 }
 
 .form__group-first {
@@ -37,8 +73,8 @@
 }
 
 .search__icon {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border: none;
   color: #fff;
   background: linear-gradient(
@@ -46,11 +82,12 @@
     var(--primary-color),
     var(--secondary-color)
   );
-  border-radius: 14px 6px 14px 6px;
+  border-radius: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .search__icon i {
@@ -65,59 +102,88 @@
 }
 
 .dark-theme .search__bar {
-  background: rgba(30, 30, 30, 0.9);
+  background: rgba(30, 30, 30, 0.92);
 }
+
+.dark-theme .search__bar .form__group h6,
+.dark-theme .search__bar .form__group input {
+  color: #fff;
+}
+
+.dark-theme .search__bar .form__group input::placeholder {
+  color: #bbb;
+}
+
+/* ========================= */
+/* TABLET RESPONSIVE */
+/* ========================= */
 
 @media only screen and (max-width: 992px) {
   .search__bar {
-    width: 100%;
-    border-radius: 2rem;
-    padding: 1.5rem;
+    padding: 1.3rem;
+    border-radius: 22px;
   }
 
-  .search__bar form {
+  .search__form {
     flex-wrap: wrap;
   }
 
-  .search__bar form .form__group {
+  .form__group {
     width: 48%;
-  }
-}
-
-@media only screen and (max-width: 576px) {
-  .search__bar {
-    width: 100%;
-    border-radius: 1rem;
-  }
-
-  .search__bar form {
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .search__bar form .form__group {
-    width: 100%;
-  }
-
-  .form__group-first {
-    border-right: none;
-    padding-right: 0;
-  }
-
-  .search__bar .form__group input {
-    font-size: 0.8rem;
-  }
-
-  .search__bar .form__group span {
-    font-size: 1.2rem;
-  }
-
-  .search__bar .form__group h6 {
-    font-size: 1rem;
+    flex: unset;
   }
 
   .search__icon {
     width: 100%;
-    border-radius: 0.7rem;
+    border-radius: 14px;
+  }
+}
+
+/* ========================= */
+/* MOBILE RESPONSIVE */
+/* ========================= */
+
+@media only screen and (max-width: 576px) {
+  .search__bar {
+    width: 100%;
+    border-radius: 18px;
+    padding: 1rem;
+    margin-top: 30px;
+  }
+
+  .search__form {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .form__group {
+    width: 100%;
+    border-right: none !important;
+    padding-right: 0 !important;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .form__group:last-of-type {
+    border-bottom: none;
+  }
+
+  .search__bar .form__group span {
+    font-size: 1.3rem;
+  }
+
+  .search__bar .form__group h6 {
+    font-size: 0.95rem;
+  }
+
+  .search__bar .form__group input {
+    font-size: 0.9rem;
+  }
+
+  .search__icon {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
   }
 }

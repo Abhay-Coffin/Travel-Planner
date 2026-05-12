@@ -1,332 +1,234 @@
-import React, {
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
+import React, { useContext, useRef } from "react";
 import {
   Container,
   Row,
   Col,
   Form,
-  ListGroup,
-  Alert,
+  FormGroup,
+  Button,
 } from "reactstrap";
-
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
-import axios from "axios";
-
-import avtar from "../assets/images/avatar.jpg";
-
-import "../styles/Blogdetails.css";
+import Newsletter from "../Shared/Newsletter";
+import Loader from "../Components/Loader/Loader";
+import BackButton from "../Components/common/BackButton";
 
 import useFetch from "../hooks/useFetch";
-
-import FeaturedBlogsList from "../Components/FeaturedBlogs/FeaturedBlogsList";
-
-import Subtitle from "../Shared/Subtitle";
-import Newsletter from "../Shared/Newsletter";
-
 import { BASE_URL } from "../utils/config";
 import { AuthContext } from "../context/AuthContext";
+
+import "../styles/Blogdetails.css";
 
 const BlogDetails = () => {
   const { id } = useParams();
 
-  const [blog, setBlog] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const [comments, setComments] = useState([]);
-
-  const [commentStatus, setCommentStatus] = useState(null);
-
-  const [isLoginAlertVisible, setIsLoginAlertVisible] =
-    useState(false);
-
-  const commentMsgRef = useRef("");
-
+  const reviewMsgRef = useRef("");
   const { user } = useContext(AuthContext);
 
-  useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        const response = await axios.get(
-          `${BASE_URL}/blogs/${id}`
-        );
-
-        setBlog(response.data?.data || response.data);
-
-        setLoading(false);
-      } catch (error) {
-        console.error(error);
-
-        setError("Error loading blog details.");
-
-        setLoading(false);
-      }
-    };
-
-    fetchBlog();
-  }, [id]);
+  const {
+    data: blog,
+    loading,
+    error,
+  } = useFetch(`${BASE_URL}/blogs/${id}`);
 
   const {
-    data: fetchedComments,
+    data: comments,
     loading: loadingComments,
     error: errorComments,
-  } = useFetch(`comment/${id}`);
-
-  useEffect(() => {
-    if (Array.isArray(fetchedComments)) {
-      setComments(fetchedComments);
-    } else if (fetchedComments?.data) {
-      setComments(fetchedComments.data);
-    }
-  }, [fetchedComments]);
-
-  const options = {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  };
+  } = useFetch(`${BASE_URL}/comment/${id}`);
 
   const submitHandler = async (e) => {
     e.preventDefault();
 
+    const reviewText = reviewMsgRef.current.value;
+
     if (!user) {
-      setIsLoginAlertVisible(true);
+      toast.error("Please login first");
       return;
     }
 
-    const commentMsg = commentMsgRef.current.value;
-
-    if (!commentMsg.trim()) return;
-
-    const commentData = {
-      comment: commentMsg,
-      username: user.username,
-    };
+    if (!reviewText.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
 
     try {
-      const response = await axios.post(
-        `${BASE_URL}/comment/${id}`,
-        commentData
-      );
+      const res = await fetch(`${BASE_URL}/comment/${id}`, {
+        method: "post",
+        headers: {
+          "content-type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          username: user?.username,
+          reviewText,
+        }),
+      });
 
-      const newComment =
-        response.data?.data || response.data;
+      const result = await res.json();
 
-      setComments((prev) => [...prev, newComment]);
+      if (!res.ok) {
+        return toast.error(result.message);
+      }
 
-      commentMsgRef.current.value = "";
+      toast.success("Comment submitted successfully");
 
-      setCommentStatus("success");
-    } catch (error) {
-      console.error(error);
+      reviewMsgRef.current.value = "";
 
-      setCommentStatus("error");
+      window.location.reload();
+    } catch (err) {
+      toast.error("Something went wrong");
     }
   };
 
-  if (loading || loadingComments) {
-    return (
-      <div className="loader-container">
-        <div className="loader" />
+  if (loading || loadingComments) return <Loader />;
 
-        <div className="loading-text">
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
-  if (error || errorComments || !blog) {
+  if (error || errorComments || !blog || !blog._id) {
     return (
-      <div className="error__msg">
-        Error loading blog details.
-        Check your network.
-      </div>
+      <section>
+        <Container>
+          <Row>
+            <Col lg="12">
+              <div className="blog__error-box">
+                <h3>Error loading blog details.</h3>
+
+                <Button
+                  className="primary__btn mt-3"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </Button>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </section>
     );
   }
 
   const {
-    title,
-    author,
-    createdAt,
-    photo,
-    content,
+    title = "",
+    author = "",
+    createdAt = new Date(),
+    photo = "",
+    content = "",
   } = blog;
 
   return (
     <>
       <section>
         <Container>
+          <BackButton />
+
           <Row>
             <Col lg="8">
               <div className="blog__content">
+                <img
+                  src={photo}
+                  alt={title}
+                  className="blog__featured-img"
+                />
+
                 <div className="blog__info">
-                  <h2 className="blog__title">
-                    {title}
-                  </h2>
+                  <h2>{title}</h2>
 
-                  <div className="d-flex align-items-center gap-5">
-                    <span className="blog__rating d-flex align-items-center gap-1">
-                      <i className="ri-user-line"></i>
-
-                      {author}
-                    </span>
-                  </div>
-
-                  <div className="blog__extra-details">
+                  <div className="blog__meta">
                     <span>
-                      <i className="ri-calendar-line"></i>
-
-                      {new Date(
-                        createdAt
-                      ).toLocaleDateString(
-                        "en-IN",
-                        options
-                      )}
+                      <i className="ri-user-line"></i> {author}
                     </span>
 
                     <span>
-                      <i className="ri-chat-3-line"></i>
-
-                      {comments?.length || 0}{" "}
-                      {comments?.length === 1
-                        ? "Comment"
-                        : "Comments"}
+                      <i className="ri-calendar-line"></i>{" "}
+                      {new Date(createdAt).toLocaleDateString()}
                     </span>
                   </div>
-
-                  <h5>Blog Content</h5>
 
                   <p>{content}</p>
-
-                  <img
-                    src={photo}
-                    alt={title}
-                  />
                 </div>
 
-                <div className="blog__reviews mt-4">
-                  <h4>Comments</h4>
+                {/* COMMENT SECTION */}
 
-                  {commentStatus === "success" && (
-                    <Alert
-                      color="success"
-                      toggle={() =>
-                        setCommentStatus(null)
-                      }
-                    >
-                      Comment added successfully.
-                    </Alert>
-                  )}
-
-                  {commentStatus === "error" && (
-                    <Alert
-                      color="danger"
-                      toggle={() =>
-                        setCommentStatus(null)
-                      }
-                    >
-                      Failed to add comment.
-                      Please try again.
-                    </Alert>
-                  )}
-
-                  {isLoginAlertVisible && (
-                    <Alert
-                      color="warning"
-                      toggle={() =>
-                        setIsLoginAlertVisible(
-                          false
-                        )
-                      }
-                    >
-                      Please login to add a
-                      comment.
-                    </Alert>
-                  )}
+                <div className="blog__comment-section">
+                  <h4>Leave a Comment</h4>
 
                   <Form onSubmit={submitHandler}>
-                    <div className="review__input">
-                      <input
-                        type="text"
-                        placeholder="Share your thoughts"
+                    <FormGroup>
+                      <textarea
+                        rows="4"
+                        placeholder="Write your comment..."
+                        ref={reviewMsgRef}
                         required
-                        ref={commentMsgRef}
-                      />
+                      ></textarea>
+                    </FormGroup>
 
-                      <button
-                        className="primary__btn text-white"
-                        type="submit"
-                      >
-                        Submit
-                      </button>
-                    </div>
+                    <Button className="btn primary__btn" type="submit">
+                      Submit
+                    </Button>
                   </Form>
 
-                  <ListGroup className="user__reviews">
-                    {comments?.map(
-                      (comment, index) => (
+                  {/* COMMENTS */}
+
+                  <div className="blog__comments mt-5">
+                    <h4>
+                      Comments ({comments?.data?.length || 0})
+                    </h4>
+
+                    {(comments?.data?.length || 0) === 0 ? (
+                      <p className="mt-3">
+                        No comments yet. Be the first to comment!
+                      </p>
+                    ) : (
+                      comments.data.map((item, index) => (
                         <div
-                          className="review__item"
-                          key={index}
+                          className="comment__item"
+                          key={item._id || index}
                         >
-                          <img
-                            src={avtar}
-                            alt="User Avatar"
-                          />
+                          <div className="comment__top">
+                            <div>
+                              <h6>{item.username}</h6>
 
-                          <div className="w-100">
-                            <div className="d-flex align-items-center justify-content-between">
-                              <div>
-                                <h5>
-                                  {
-                                    comment.username
-                                  }
-                                </h5>
-
-                                <p>
-                                  {new Date(
-                                    comment.createdAt
-                                  ).toLocaleDateString(
-                                    "en-IN",
-                                    options
-                                  )}
-                                </p>
-                              </div>
+                              <p>
+                                {new Date(
+                                  item.createdAt
+                                ).toLocaleDateString()}
+                              </p>
                             </div>
-
-                            <h6>
-                              {comment.comment}
-                            </h6>
                           </div>
+
+                          <p className="comment__text">
+                            {item.reviewText}
+                          </p>
                         </div>
-                      )
+                      ))
                     )}
-                  </ListGroup>
+                  </div>
                 </div>
               </div>
             </Col>
 
+            {/* SIDEBAR */}
+
             <Col lg="4">
-              <div className="featured__blogs">
-                <div className="blog__title">
-                  <Subtitle
-                    subtitle={"Featured Blogs"}
-                  />
+              <div className="blog__sidebar">
+                <div className="blog__author-box">
+                  <h5>About Author</h5>
+
+                  <p>
+                    {author || "Travel Explorer"}
+                  </p>
                 </div>
 
-                <div className="mx-auto md:text-center">
-                  <FeaturedBlogsList
-                    lg={11}
-                    md={10}
-                    sm={11}
-                  />
+                <div className="blog__tips-box mt-4">
+                  <h5>Travel Tips</h5>
+
+                  <ul>
+                    <li>Plan your budget early</li>
+                    <li>Carry essential documents</li>
+                    <li>Try local food experiences</li>
+                    <li>Book hotels in advance</li>
+                    <li>Keep emergency contacts ready</li>
+                  </ul>
                 </div>
               </div>
             </Col>
