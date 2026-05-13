@@ -29,9 +29,16 @@ Create a detailed travel itinerary.
 
 Destination: ${destination}
 Number of days: ${days}
-Budget: ₹${budget}
+Budget: ${budget}
 Travelers: ${travelers}
 Interests: ${interests}
+
+Important:
+- Use the exact same currency provided in the budget.
+- Do not convert the budget to INR unless the user selected INR.
+- If budget is in USD, keep all estimated costs in USD.
+- If budget is in EUR, keep all estimated costs in EUR.
+- Do not write ₹ unless budget currency is INR.
 
 Return the response in this format:
 
