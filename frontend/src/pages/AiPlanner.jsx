@@ -83,43 +83,50 @@ const AiPlanner = () => {
 
   const convertCurrency = async (amount, fromCurrency, toCurrency) => {
     try {
+      const numericAmount = Number(amount);
+
+      if (!numericAmount || numericAmount <= 0) {
+        throw new Error("Invalid budget amount.");
+      }
+
       if (fromCurrency === toCurrency) {
         return {
-          amount: Number(amount),
+          amount: numericAmount,
           from: fromCurrency,
           to: toCurrency,
           rate: 1,
+          converted: true,
         };
       }
 
       const response = await axios.get(
-        `https://api.exchangerate.host/convert?from=${fromCurrency}&to=${toCurrency}&amount=${amount}`
+        `https://api.frankfurter.app/latest?amount=${numericAmount}&from=${fromCurrency}&to=${toCurrency}`
       );
 
-      console.log("Currency API Response:", response.data);
-
-      const convertedAmount = response.data?.result;
+      const convertedAmount = response.data?.rates?.[toCurrency];
 
       if (!convertedAmount || isNaN(convertedAmount)) {
         throw new Error("Currency conversion failed.");
       }
 
       return {
-        amount: convertedAmount,
+        amount: Number(convertedAmount),
         from: fromCurrency,
         to: toCurrency,
-        rate: convertedAmount / Number(amount),
+        rate: Number(convertedAmount) / numericAmount,
+        converted: true,
       };
     } catch (error) {
       console.error("Currency conversion error:", error);
 
-      toast.error("Currency conversion failed. Using original budget.");
+      toast.warning("Currency conversion failed. Using original budget.");
 
       return {
         amount: Number(amount),
         from: fromCurrency,
-        to: toCurrency,
+        to: fromCurrency,
         rate: 1,
+        converted: false,
       };
     }
   };
@@ -133,9 +140,7 @@ const AiPlanner = () => {
     setConvertedBudget(null);
 
     try {
-      const destinationCurrency = getDestinationCurrency(
-        formData.destination
-      );
+      const destinationCurrency = getDestinationCurrency(formData.destination);
 
       const conversion = await convertCurrency(
         formData.budget,
@@ -153,10 +158,7 @@ const AiPlanner = () => {
         budget: `${conversion.amount.toFixed(2)} ${conversion.to}`,
       };
 
-      const response = await axios.post(
-        `${BASE_URL}/ai/itinerary`,
-        payload
-      );
+      const response = await axios.post(`${BASE_URL}/ai/itinerary`, payload);
 
       setItinerary(response.data?.data || "No itinerary generated.");
 
@@ -233,12 +235,10 @@ ${itinerary}`;
     });
 
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
 
     link.href = url;
     link.download = `${formData.destination || "travel"}-itinerary.txt`;
-
     link.click();
 
     URL.revokeObjectURL(url);
@@ -393,18 +393,18 @@ ${itinerary}`;
                     <strong>
                       {formData.budget} {formData.currency}
                     </strong>{" "}
-                    is approximately{" "}
+                    {convertedBudget.converted
+                      ? "is approximately"
+                      : "is being used as"}{" "}
                     <strong>
-                      {convertedBudget.amount.toFixed(2)}{" "}
-                      {convertedBudget.to}
+                      {convertedBudget.amount.toFixed(2)} {convertedBudget.to}
                     </strong>{" "}
                     for {formData.destination}.
                   </p>
 
                   <small>
                     Exchange rate used: 1 {convertedBudget.from} ={" "}
-                    {convertedBudget.rate.toFixed(4)}{" "}
-                    {convertedBudget.to}
+                    {convertedBudget.rate.toFixed(4)} {convertedBudget.to}
                   </small>
                 </div>
               </Col>
