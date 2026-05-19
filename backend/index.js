@@ -5,6 +5,10 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import compression from "compression";
+import rateLimit from "express-rate-limit";
+import morgan from "morgan";
 
 import authRoute from "./router/auth.js";
 import tourRoute from "./router/tours.js";
@@ -18,6 +22,8 @@ import commentRoute from "./router/comment.js";
 import aiRoute from "./router/ai.js";
 import chatbotRoute from "./router/chatbot.js";
 import paymentRoute from "./router/payment.js";
+import weatherRoute from "./router/weather.js";
+import itineraryRoute from "./router/itinerary.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -30,6 +36,44 @@ const allowedOrigins = [
   "https://travel-planner-git-main-abhay-sharmas-projects-bc8eb13e.vercel.app",
   "https://travel-planner-6w0tqvvb9-abhay-sharmas-projects-bc8eb13e.vercel.app",
 ];
+
+app.set("trust proxy", 1);
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
+
+app.use(compression());
+
+if (process.env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many requests. Please try again later.",
+  },
+});
+
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 25,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many AI requests. Please wait and try again.",
+  },
+});
+
+app.use(generalLimiter);
 
 app.use(
   cors({
@@ -79,6 +123,15 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/api/v1/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Backend is healthy",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/tours", tourRoute);
 app.use("/api/v1/search", searchRoute);
@@ -88,9 +141,14 @@ app.use("/api/v1/booking", bookingRoute);
 app.use("/api/v1/contact", contactRoute);
 app.use("/api/v1/blogs", blogRoute);
 app.use("/api/v1/comment", commentRoute);
-app.use("/api/v1/ai", aiRoute);
-app.use("/api/v1/chatbot", chatbotRoute);
+
+app.use("/api/v1/ai", aiLimiter, aiRoute);
+app.use("/api/v1/chatbot", aiLimiter, chatbotRoute);
+app.use("/api/v1/itineraries", itineraryRoute);
+
+
 app.use("/api/v1/payment", paymentRoute);
+app.use("/api/v1/weather", weatherRoute);
 
 app.use((req, res) => {
   res.status(404).json({
@@ -102,9 +160,12 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error("SERVER ERROR:", err.message);
 
-  res.status(500).json({
+  res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || "Internal server error",
+    message:
+      process.env.NODE_ENV === "production"
+        ? "Internal server error"
+        : err.message || "Internal server error",
   });
 });
 

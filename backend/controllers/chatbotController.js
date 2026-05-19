@@ -1,14 +1,44 @@
 import OpenAI from "openai";
 
-const groqClient = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+const getGroqClient = () => {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY is missing in backend .env file");
+  }
+
+  return new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+};
+
+const sanitizeInput = (value) => {
+  return String(value || "")
+    .replace(/[<>]/g, "")
+    .trim();
+};
+
+const cleanHistory = (history = []) => {
+  if (!Array.isArray(history)) return [];
+
+  return history
+    .slice(-10)
+    .filter(
+      (item) =>
+        item &&
+        ["user", "assistant"].includes(item.role) &&
+        typeof item.content === "string"
+    )
+    .map((item) => ({
+      role: item.role,
+      content: sanitizeInput(item.content).slice(0, 1200),
+    }));
+};
 
 export const chatWithAssistant = async (req, res) => {
-  const { message } = req.body;
-
   try {
+    const message = sanitizeInput(req.body.message);
+    const history = cleanHistory(req.body.history);
+
     if (!message) {
       return res.status(400).json({
         success: false,
@@ -16,31 +46,33 @@ export const chatWithAssistant = async (req, res) => {
       });
     }
 
-    if (!process.env.GROQ_API_KEY) {
-      return res.status(500).json({
+    if (message.length > 1000) {
+      return res.status(400).json({
         success: false,
-        message: "Groq API key missing in backend environment variables",
+        message: "Message is too long. Please keep it under 1000 characters.",
       });
     }
 
-    const prompt = `
-You are Travel World AI Assistant.
+    const groqClient = getGroqClient();
 
-Help users with:
-- trip planning
-- destination suggestions
-- budget travel
-- hotel ideas
-- food recommendations
-- packing tips
-- travel safety
-- itinerary suggestions
+    const systemPrompt = `
+You are Travel World AI Assistant, a context-aware travel planning assistant.
 
-User message:
-${message}
+Your job:
+- Help users plan trips.
+- Understand follow-up messages using conversation history.
+- If user says "make it cheaper", "add nightlife", "make it family friendly", or similar, use previous context.
+- Give practical travel advice, not generic paragraphs.
+- Answer only in clear English.
+- Keep responses structured and easy to read.
+- Do not invent booking links.
+- Do not ask too many questions unless required.
 
-Give helpful, practical, friendly travel advice.
-Keep answers clear and structured.
+Response style:
+- Use short headings.
+- Use bullet points.
+- Include budget tips when useful.
+- Mention safety and local travel advice when relevant.
 `;
 
     const completion = await groqClient.chat.completions.create({
@@ -48,16 +80,16 @@ Keep answers clear and structured.
       messages: [
         {
           role: "system",
-          content:
-            "You are a helpful AI travel assistant for a travel planning website. Always answer in clear English.",
+          content: systemPrompt,
         },
+        ...history,
         {
           role: "user",
-          content: prompt,
+          content: message,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 900,
+      temperature: 0.65,
+      max_tokens: 1000,
     });
 
     const reply =
@@ -73,8 +105,11 @@ Keep answers clear and structured.
 
     res.status(500).json({
       success: false,
-      message: "Chatbot failed",
-      error: error.message,
+      message: "Chatbot failed. Please try again.",
+      error:
+        process.env.NODE_ENV === "production"
+          ? "AI service error"
+          : error.message,
     });
   }
 };

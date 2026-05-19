@@ -1,19 +1,49 @@
 import OpenAI from "openai";
 
-const groqClient = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-});
+const getGroqClient = () => {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY is missing in backend .env file");
+  }
+
+  return new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
+};
+
+const sanitizeInput = (value) => {
+  return String(value || "")
+    .replace(/[<>]/g, "")
+    .trim();
+};
 
 export const generateItinerary = async (req, res) => {
-  const { destination, days, budget, travelers, interests } = req.body;
-
   try {
+    const destination = sanitizeInput(req.body.destination);
+    const days = Number(req.body.days);
+    const budget = sanitizeInput(req.body.budget);
+    const travelers = Number(req.body.travelers);
+    const interests = sanitizeInput(req.body.interests);
+
     if (!destination || !days || !budget || !travelers || !interests) {
       return res.status(400).json({
         success: false,
         message:
           "Destination, days, budget, travelers and interests are required",
+      });
+    }
+
+    if (days < 1 || days > 15) {
+      return res.status(400).json({
+        success: false,
+        message: "Trip duration must be between 1 and 15 days",
+      });
+    }
+
+    if (travelers < 1 || travelers > 20) {
+      return res.status(400).json({
+        success: false,
+        message: "Travelers must be between 1 and 20",
       });
     }
 
@@ -25,22 +55,31 @@ export const generateItinerary = async (req, res) => {
     }
 
     const prompt = `
-Create a detailed travel itinerary.
+Create a premium, practical, day-wise travel itinerary.
 
+User Trip Details:
 Destination: ${destination}
 Number of days: ${days}
-Budget: ${budget}
+Total budget: ${budget}
 Travelers: ${travelers}
 Interests: ${interests}
 
-Important:
-- Use the exact same currency provided in the budget.
-- Do not convert the budget to INR unless the user selected INR.
-- If budget is in USD, keep all estimated costs in USD.
-- If budget is in EUR, keep all estimated costs in EUR.
-- Do not write ₹ unless budget currency is INR.
+Currency Rules:
+- Use the exact same currency written in the budget.
+- Never convert the budget to INR unless INR is already provided.
+- Do not use ₹ unless the budget is INR.
+- Keep all estimated costs in the same budget currency.
 
-Return the response in this format:
+Important Quality Rules:
+- Make the plan realistic for the given budget.
+- Mention budget-saving ideas where useful.
+- Avoid vague suggestions.
+- Include specific food, places, activities, and timing.
+- Keep language simple and readable.
+- Do not add markdown tables.
+- Do not add fake booking links.
+
+Return the response exactly in this structure:
 
 Trip Summary:
 - Destination:
@@ -48,6 +87,40 @@ Trip Summary:
 - Budget:
 - Travelers:
 - Travel Style:
+- Best For:
+
+Budget Breakdown:
+- Stay:
+- Food:
+- Local Transport:
+- Activities:
+- Emergency Buffer:
+
+Trip Intelligence:
+- Trip Difficulty:
+- Travel Mood:
+- Trip Score:
+- Best For:
+- Daily Average Cost:
+
+Packing Checklist:
+- Clothes:
+- Documents:
+- Gadgets:
+- Medicines:
+- Weather Gear:
+
+Safety Intelligence:
+- Scam Alerts:
+- Emergency Tips:
+- Safe Transport:
+- Local Etiquette:
+
+Smart Recommendations:
+- Hidden Gems:
+- Best Cafes:
+- Best Local Transport:
+- Best Time To Visit:
 
 Day-wise Itinerary:
 Day 1:
@@ -56,18 +129,41 @@ Afternoon:
 Evening:
 Food Suggestions:
 Estimated Cost:
+Smart Tip:
 
-Continue for all ${days} days.
+Continue the same Day format for all ${days} days.
 
-Also include:
-- Best places to visit
-- Local food to try
-- Travel tips
-- Budget saving tips
-- Packing suggestions
+Best Places To Visit:
+- 
+- 
+- 
 
-Keep the answer practical, detailed, and easy to read.
+Local Food To Try:
+- 
+- 
+- 
+
+Packing Suggestions:
+- 
+- 
+- 
+
+Safety Tips:
+- 
+- 
+- 
+
+Budget Saving Tips:
+- 
+- 
+- 
+
+Final Recommendation:
+Write a short final recommendation for the traveler.
 `;
+
+const groqClient = getGroqClient();
+
 
     const completion = await groqClient.chat.completions.create({
       model: "llama-3.3-70b-versatile",
@@ -75,15 +171,15 @@ Keep the answer practical, detailed, and easy to read.
         {
           role: "system",
           content:
-            "You are a professional travel planner. Create practical, budget-friendly, day-wise itineraries.",
+            "You are a senior travel planner and budget optimization expert. Create practical, safe, engaging, and budget-aware travel itineraries.",
         },
         {
           role: "user",
           content: prompt,
         },
       ],
-      temperature: 0.7,
-      max_tokens: 1800,
+      temperature: 0.65,
+      max_tokens: 2200,
     });
 
     const itinerary =
@@ -100,7 +196,10 @@ Keep the answer practical, detailed, and easy to read.
     res.status(500).json({
       success: false,
       message: "Failed to generate itinerary",
-      error: error.message,
+      error:
+        process.env.NODE_ENV === "production"
+          ? "AI service error"
+          : error.message,
     });
   }
 };
