@@ -91,7 +91,6 @@ const destinationImageMap = {
       description: "Cafes, local markets, backpacker vibe, and riverside walks.",
     },
   ],
-
   goa: [
     {
       title: "Baga Beach",
@@ -112,7 +111,6 @@ const destinationImageMap = {
       description: "Calm beach ideal for relaxing and kayaking.",
     },
   ],
-
   paris: [
     {
       title: "Eiffel Tower",
@@ -158,7 +156,6 @@ const fallbackImages = [
 
 const getDestinationCurrency = (destination) => {
   const value = destination.toLowerCase();
-
   const matchedKey = Object.keys(destinationCurrencyMap).find((key) =>
     value.includes(key)
   );
@@ -168,7 +165,6 @@ const getDestinationCurrency = (destination) => {
 
 const getDestinationImages = (destination) => {
   const value = destination.toLowerCase();
-
   const matchedKey = Object.keys(destinationImageMap).find((key) =>
     value.includes(key)
   );
@@ -481,35 +477,18 @@ const AiPlanner = () => {
         throw new Error("Invalid budget amount.");
       }
 
-      if (fromCurrency === toCurrency) {
-        return {
+      const response = await axios.get(`${BASE_URL}/currency/convert`, {
+        params: {
           amount: numericAmount,
           from: fromCurrency,
           to: toCurrency,
-          rate: 1,
-          converted: true,
-        };
-      }
+        },
+      });
 
-      const response = await axios.get(
-        `https://api.frankfurter.app/latest?amount=${numericAmount}&from=${fromCurrency}&to=${toCurrency}`
-      );
-
-      const convertedAmount = response.data?.rates?.[toCurrency];
-
-      if (!convertedAmount || isNaN(convertedAmount)) {
-        throw new Error("Currency conversion failed.");
-      }
-
-      return {
-        amount: Number(convertedAmount),
-        from: fromCurrency,
-        to: toCurrency,
-        rate: Number(convertedAmount) / numericAmount,
-        converted: true,
-      };
+      return response.data?.data;
     } catch (error) {
       console.error("Currency conversion error:", error);
+
       toast.warning("Currency conversion failed. Using original budget.");
 
       return {
@@ -1032,7 +1011,6 @@ const AiPlanner = () => {
                           transition={{ duration: 0.35 }}
                         >
                           <img src={item.image} alt={item.title} />
-
                           <div>
                             <h5>{item.title}</h5>
                             <p>{item.description}</p>
@@ -1217,7 +1195,6 @@ const AiPlanner = () => {
                           transition={{ duration: 0.35 }}
                         >
                           <div className="day__number">{day.id}</div>
-
                           <div>
                             <h4>{day.title}</h4>
                             <p>{day.content}</p>
