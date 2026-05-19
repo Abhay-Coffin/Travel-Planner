@@ -7,7 +7,10 @@ const errorHandler = (res, statusCode, message) => {
 
 const verifyToken = async (req, res, next) => {
   try {
-    let token = req.headers.authorization;
+    let token =
+      req.headers.authorization ||
+      req.cookies?.accessToken ||
+      req.cookies?.token;
 
     if (!token) {
       return errorHandler(res, 401, "No token provided");
@@ -38,20 +41,24 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-export const verifyUser = (req, res, next) => {
-  if (req.user && (req.user.role === "user" || req.user.role === "admin")) {
-    next();
-  } else {
+export const verifyUser = async (req, res, next) => {
+  await verifyToken(req, res, () => {
+    if (req.user && (req.user.role === "user" || req.user.role === "admin")) {
+      return next();
+    }
+
     return errorHandler(res, 403, "Access denied");
-  }
+  });
 };
 
-export const verifyAdmin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
-    next();
-  } else {
+export const verifyAdmin = async (req, res, next) => {
+  await verifyToken(req, res, () => {
+    if (req.user && req.user.role === "admin") {
+      return next();
+    }
+
     return errorHandler(res, 403, "Admin access required");
-  }
+  });
 };
 
 export default verifyToken;
