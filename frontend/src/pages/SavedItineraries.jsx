@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Button } from "reactstrap";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 import Newsletter from "../Shared/Newsletter";
 import BackButton from "../Components/common/BackButton";
+import { BASE_URL } from "../utils/config";
 
 import "../styles/SavedItineraries.css";
 
@@ -31,27 +35,89 @@ const getTripImage = (destination = "") => {
   return destinationImages.default;
 };
 
+const getAuthData = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const token =
+      user?.token ||
+      user?.data?.token ||
+      user?.accessToken ||
+      user?.data?.accessToken ||
+      user?.jwt ||
+      user?.data?.jwt ||
+      localStorage.getItem("token");
+
+    return { user, token };
+  } catch {
+    return { user: null, token: localStorage.getItem("token") };
+  }
+};
+
 const SavedItineraries = () => {
+  const navigate = useNavigate();
+
   const [savedTrips, setSavedTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSavedTrips = async () => {
+    try {
+      const { token } = getAuthData();
+
+      if (!token) {
+        toast.error("Please login first");
+        setLoading(false);
+        return;
+      }
+
+      const res = await axios.get(`${BASE_URL}/itineraries/mine`, {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const trips = res.data?.data || [];
+
+      setSavedTrips(trips);
+      setSelectedTrip(trips[0] || null);
+    } catch (error) {
+      console.error("FETCH SAVED TRIPS ERROR:", error);
+      toast.error(error.response?.data?.message || "Failed to load trips");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const trips = JSON.parse(localStorage.getItem("savedItineraries")) || [];
-    setSavedTrips(trips);
-
-    if (trips.length > 0) {
-      setSelectedTrip(trips[0]);
-    }
+    fetchSavedTrips();
   }, []);
 
-  const deleteTrip = (tripToDelete) => {
-    const updatedTrips = savedTrips.filter((trip) => trip !== tripToDelete);
+  const deleteTrip = async (trip) => {
+    try {
+      const { token } = getAuthData();
 
-    setSavedTrips(updatedTrips);
-    localStorage.setItem("savedItineraries", JSON.stringify(updatedTrips));
+      if (!token) {
+        toast.error("Please login first");
+        return;
+      }
 
-    if (selectedTrip === tripToDelete) {
+      await axios.delete(`${BASE_URL}/itineraries/${trip._id}`, {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const updatedTrips = savedTrips.filter((item) => item._id !== trip._id);
+
+      setSavedTrips(updatedTrips);
       setSelectedTrip(updatedTrips[0] || null);
+
+      toast.success("Itinerary deleted!");
+    } catch (error) {
+      console.error("DELETE TRIP ERROR:", error);
+      toast.error(error.response?.data?.message || "Delete failed");
     }
   };
 
@@ -80,29 +146,19 @@ ${trip.itinerary}`;
     URL.revokeObjectURL(url);
   };
 
-  const toggleFavorite = (e, trip) => {
-    e.stopPropagation();
+  const copyPublicLink = async (trip) => {
+    if (!trip.shareId) {
+      toast.info("This trip was saved privately. Share it from AI Planner.");
+      return;
+    }
 
-    const updatedTrips = savedTrips.map((item) => {
-      if (item === trip) {
-        return {
-          ...item,
-          isFavorite: !item.isFavorite,
-        };
-      }
+    const shareUrl = `${window.location.origin}/shared/${trip.shareId}`;
 
-      return item;
-    });
-
-    setSavedTrips(updatedTrips);
-    localStorage.setItem("savedItineraries", JSON.stringify(updatedTrips));
-
-    if (selectedTrip === trip) {
-      const updatedSelected = updatedTrips.find(
-        (item) => item.createdAt === trip.createdAt
-      );
-
-      setSelectedTrip(updatedSelected);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Public link copied!");
+    } catch {
+      toast.error("Failed to copy link");
     }
   };
 
@@ -114,23 +170,44 @@ ${trip.itinerary}`;
 
           <div className="saved__header">
             <h1>Saved Trips</h1>
-            <p>All your AI generated itineraries in one place.</p>
+            <p>Your cloud-saved AI itineraries from MongoDB.</p>
           </div>
 
-          {savedTrips.length === 0 ? (
+          {loading ? (
+            <div className="saved__empty">
+              <h3>Loading saved itineraries...</h3>
+            </div>
+          ) : !getAuthData().token ? (
+            <div className="saved__empty">
+              <h3>Please login first</h3>
+              <p>You need to login to view your cloud-saved itineraries.</p>
+              <Button
+                className="btn primary__btn mt-3"
+                onClick={() => navigate("/login")}
+              >
+                Login
+              </Button>
+            </div>
+          ) : savedTrips.length === 0 ? (
             <div className="saved__empty">
               <h3>No saved itineraries yet.</h3>
               <p>Generate an AI trip and click Save to see it here.</p>
+              <Button
+                className="btn primary__btn mt-3"
+                onClick={() => navigate("/ai-planner")}
+              >
+                Create AI Trip
+              </Button>
             </div>
           ) : (
             <Row>
               <Col lg="6">
                 <Row>
-                  {savedTrips.map((trip, index) => (
-                    <Col md="6" className="mb-4" key={index}>
+                  {savedTrips.map((trip) => (
+                    <Col md="6" className="mb-4" key={trip._id}>
                       <motion.div
                         className={`saved__card ${
-                          selectedTrip === trip ? "active" : ""
+                          selectedTrip?._id === trip._id ? "active" : ""
                         }`}
                         onClick={() => setSelectedTrip(trip)}
                         initial={{ opacity: 0, y: 40 }}
@@ -145,22 +222,7 @@ ${trip.itinerary}`;
                             alt={trip.destination}
                           />
 
-                          <button
-                            className={`saved__heart ${
-                              trip.isFavorite ? "active__heart" : ""
-                            }`}
-                            onClick={(e) => toggleFavorite(e, trip)}
-                          >
-                            <i
-                              className={
-                                trip.isFavorite
-                                  ? "ri-heart-fill"
-                                  : "ri-heart-line"
-                              }
-                            ></i>
-                          </button>
-
-                          <span>Saved</span>
+                          <span>{trip.isPublic ? "Public" : "Private"}</span>
                         </div>
 
                         <div className="saved__card-body">
@@ -185,7 +247,7 @@ ${trip.itinerary}`;
                 <AnimatePresence mode="wait">
                   {selectedTrip && (
                     <motion.div
-                      key={selectedTrip.destination + selectedTrip.createdAt}
+                      key={selectedTrip._id}
                       className="trip__details"
                       initial={{ opacity: 0, x: 60 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -208,11 +270,26 @@ ${trip.itinerary}`;
                       </p>
 
                       <div className="trip__actions">
-                        <Button color="dark" onClick={() => downloadTrip(selectedTrip)}>
+                        <Button
+                          color="dark"
+                          onClick={() => downloadTrip(selectedTrip)}
+                        >
                           <i className="ri-download-line"></i> Download
                         </Button>
 
-                        <Button color="danger" onClick={() => deleteTrip(selectedTrip)}>
+                        {selectedTrip.isPublic && (
+                          <Button
+                            color="warning"
+                            onClick={() => copyPublicLink(selectedTrip)}
+                          >
+                            <i className="ri-share-line"></i> Share
+                          </Button>
+                        )}
+
+                        <Button
+                          color="danger"
+                          onClick={() => deleteTrip(selectedTrip)}
+                        >
                           <i className="ri-delete-bin-line"></i> Delete
                         </Button>
                       </div>

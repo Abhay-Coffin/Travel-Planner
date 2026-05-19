@@ -14,6 +14,22 @@ import LoginVortexBackground from "../Components/AnimatedBackground/LoginVortexB
 
 const loginImg = "https://cdn-icons-png.flaticon.com/512/201/201623.png";
 
+const saveAuthToLocalStorage = (result) => {
+  localStorage.setItem("user", JSON.stringify(result.data));
+
+  const token =
+    result?.token ||
+    result?.data?.token ||
+    result?.accessToken ||
+    result?.data?.accessToken ||
+    result?.jwt ||
+    result?.data?.jwt;
+
+  if (token) {
+    localStorage.setItem("token", token);
+  }
+};
+
 const Login = () => {
   const emailRef = useRef("");
   const passwordRef = useRef("");
@@ -64,7 +80,7 @@ const Login = () => {
         payload: result.data,
       });
 
-      localStorage.setItem("user", JSON.stringify(result.data));
+      saveAuthToLocalStorage(result);
 
       toast.success("Login successful!");
       navigate("/");
@@ -109,7 +125,7 @@ const Login = () => {
         payload: result.data,
       });
 
-      localStorage.setItem("user", JSON.stringify(result.data));
+      saveAuthToLocalStorage(result);
 
       toast.success("Google login successful!");
       navigate("/");

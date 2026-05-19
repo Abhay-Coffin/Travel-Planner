@@ -22,6 +22,8 @@ import Wishlist from "../pages/Wishlist";
 import ScrollToTop from "../utils/scrollToTop";
 import AiPlanner from "../pages/AiPlanner";
 import SavedItineraries from "../pages/SavedItineraries";
+import SharedItinerary from "../pages/SharedItinerary";
+import PublicItinerary from "../pages/PublicItinerary";
 
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminTours from "../pages/AdminTours";
@@ -222,6 +224,16 @@ const Routers = () => {
               </PageWrapper>
             }
           />
+          <Route path="/shared/:shareId" element={<PageWrapper><PublicItinerary /></PageWrapper>} />
+
+          <Route
+  path="/share-itinerary/:id"
+  element={
+    <PageWrapper>
+      <SharedItinerary />
+    </PageWrapper>
+  }
+/>
 
           <Route
             path="/admin"

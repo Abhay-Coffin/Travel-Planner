@@ -15,10 +15,12 @@ const defaultMessages = [
 
 const quickQuestions = [
   "Plan a 3-day Manali trip under ₹15000",
-  "Suggest a budget Goa trip",
-  "Best food to try in Paris",
-  "Packing list for a hill station",
+  "Make my last trip cheaper",
+  "Suggest a family-friendly Goa trip",
+  "Create a packing list for hill station",
 ];
+
+const MAX_HISTORY_FOR_AI = 10;
 
 const Chatbot = () => {
   const navigate = useNavigate();
@@ -43,9 +45,7 @@ const Chatbot = () => {
   }, [messages]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading, open]);
 
   const sendMessage = async (e, quickText = null) => {
@@ -57,26 +57,38 @@ const Chatbot = () => {
 
     const userMessage = {
       sender: "user",
-      text: finalMessage,
+      text: finalMessage.trim(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+
+    setMessages(updatedMessages);
     setMessage("");
     setLoading(true);
 
     try {
+      const history = updatedMessages
+        .slice(-MAX_HISTORY_FOR_AI)
+        .map((item) => ({
+          role: item.sender === "user" ? "user" : "assistant",
+          content: item.text,
+        }));
+
       const res = await axios.post(`${BASE_URL}/chatbot`, {
-        message: finalMessage,
+        message: finalMessage.trim(),
+        history,
       });
+
+      const botReply =
+        res.data?.reply ||
+        res.data?.data ||
+        "Sorry, I could not generate a reply.";
 
       setMessages((prev) => [
         ...prev,
         {
           sender: "bot",
-          text:
-            res.data?.reply ||
-            res.data?.data ||
-            "Sorry, I could not generate a reply.",
+          text: botReply,
         },
       ]);
     } catch (error) {
@@ -88,7 +100,7 @@ const Chatbot = () => {
           sender: "bot",
           text:
             error.response?.data?.message ||
-            "Sorry, the chatbot is not responding right now. Please check the backend server and Groq API key.",
+            "Sorry, the chatbot is not responding right now. Please try again.",
         },
       ]);
     } finally {
@@ -111,8 +123,8 @@ const Chatbot = () => {
       <motion.button
         className="chatbot__toggle"
         onClick={() => setOpen((prev) => !prev)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
         aria-label="Open chatbot"
       >
         {open ? (
@@ -126,9 +138,9 @@ const Chatbot = () => {
         {open && (
           <motion.div
             className="chatbot__box"
-            initial={{ opacity: 0, y: 80, scale: 0.9 }}
+            initial={{ opacity: 0, y: 80, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 80, scale: 0.9 }}
+            exit={{ opacity: 0, y: 80, scale: 0.92 }}
             transition={{ duration: 0.3 }}
           >
             <div className="chatbot__header">
@@ -136,7 +148,7 @@ const Chatbot = () => {
                 <h5>AI Travel Assistant</h5>
                 <p>
                   <span className="online__dot"></span>
-                  Online
+                  Context-aware
                 </p>
               </div>
 
@@ -174,7 +186,7 @@ const Chatbot = () => {
                   className={`chatbot__message ${
                     item.sender === "user" ? "user" : "bot"
                   }`}
-                  key={index}
+                  key={`${item.sender}-${index}`}
                 >
                   <p>{item.text}</p>
                 </div>
@@ -199,9 +211,10 @@ const Chatbot = () => {
                 placeholder="Ask about your trip..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                disabled={loading}
               />
 
-              <button type="submit" disabled={loading}>
+              <button type="submit" disabled={loading || !message.trim()}>
                 <i className="ri-send-plane-fill"></i>
               </button>
             </form>

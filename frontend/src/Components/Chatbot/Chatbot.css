@@ -22,8 +22,8 @@
   position: fixed;
   right: 25px;
   bottom: 100px;
-  width: 390px;
-  height: 560px;
+  width: 410px;
+  height: 580px;
   max-height: calc(100vh - 120px);
   background: #fff;
   border-radius: 1.4rem;
@@ -52,6 +52,7 @@
   margin-bottom: 0.2rem;
   color: #fff;
   font-size: 1rem;
+  font-weight: 800;
 }
 
 .chatbot__header p {
@@ -80,7 +81,7 @@
   height: 34px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
   color: #fff;
   font-size: 1rem;
   cursor: pointer;
@@ -104,9 +105,9 @@
   background: #fff7e8;
   color: var(--primary-color);
   border-radius: 50px;
-  padding: 0.45rem 0.8rem;
+  padding: 0.48rem 0.85rem;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -124,7 +125,7 @@
 }
 
 .chatbot__message p {
-  max-width: 85%;
+  max-width: 86%;
   padding: 0.75rem 1rem;
   border-radius: 1rem;
   margin-bottom: 0;
@@ -225,12 +226,11 @@
 }
 
 .chatbot__form button:disabled,
-.chatbot__quick button:disabled {
+.chatbot__quick button:disabled,
+.chatbot__form input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
-/* Dark Theme */
 
 .dark-theme .chatbot__box,
 .dark-theme .chatbot__form,
@@ -258,18 +258,14 @@
   background: #2a2418;
 }
 
-/* Tablet Fix */
-
 @media only screen and (max-width: 992px) {
   .chatbot__box {
     right: 20px;
     bottom: 95px;
-    width: 380px;
-    height: 540px;
+    width: 390px;
+    height: 550px;
   }
 }
-
-/* Mobile Fix */
 
 @media only screen and (max-width: 768px) {
   .chatbot__toggle {
@@ -277,19 +273,16 @@
     bottom: 25px;
     width: 56px;
     height: 56px;
-    z-index: 99999999;
   }
 
   .chatbot__box {
     right: 10px;
     left: 10px;
     bottom: 90px;
-    top: auto;
     width: auto;
     height: 520px;
     max-height: calc(100vh - 130px);
     border-radius: 1.2rem;
-    z-index: 99999999;
   }
 
   .chatbot__header {
@@ -317,8 +310,6 @@
     font-size: 0.9rem;
   }
 }
-
-/* Small Mobile Fix */
 
 @media only screen and (max-width: 420px) {
   .chatbot__box {
