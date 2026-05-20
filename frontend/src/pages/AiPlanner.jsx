@@ -333,6 +333,24 @@ const extractSmartRecommendations = (text = "") => {
   });
 };
 
+const getToken = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    return (
+      user?.token ||
+      user?.data?.token ||
+      user?.accessToken ||
+      user?.data?.accessToken ||
+      user?.jwt ||
+      user?.data?.jwt ||
+      localStorage.getItem("token")
+    );
+  } catch {
+    return localStorage.getItem("token");
+  }
+};
+
 const AiPlanner = () => {
   const [formData, setFormData] = useState({
     destination: "",
@@ -563,20 +581,44 @@ const AiPlanner = () => {
     createdAt: new Date().toISOString(),
   });
 
-  const saveItinerary = () => {
-    if (!itinerary) return;
+  const saveItinerary = async () => {
+    try {
+      if (!itinerary) {
+        toast.error("No itinerary to save");
+        return;
+      }
 
-    const savedTrips =
-      JSON.parse(localStorage.getItem("savedItineraries")) || [];
+      const token = getToken();
 
-    const newTrip = createTripPayload();
+      if (!token) {
+        toast.error("Please login first");
+        return;
+      }
 
-    localStorage.setItem(
-      "savedItineraries",
-      JSON.stringify([newTrip, ...savedTrips])
-    );
+      const payload = {
+        destination: formData.destination,
+        days: Number(formData.days),
+        budget: finalBudget,
+        travelers: Number(formData.travelers),
+        interests: formData.interests,
+        itinerary,
+        isPublic: false,
+      };
 
-    toast.success("Itinerary saved!");
+      const response = await axios.post(`${BASE_URL}/itineraries`, payload, {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("SAVE RESPONSE:", response.data);
+
+      toast.success("Itinerary saved to MongoDB!");
+    } catch (error) {
+      console.error("SAVE ITINERARY ERROR:", error);
+      toast.error(error.response?.data?.message || "Failed to save itinerary");
+    }
   };
 
   const shareItinerary = async () => {
@@ -1011,6 +1053,7 @@ const AiPlanner = () => {
                           transition={{ duration: 0.35 }}
                         >
                           <img src={item.image} alt={item.title} />
+
                           <div>
                             <h5>{item.title}</h5>
                             <p>{item.description}</p>
@@ -1195,6 +1238,7 @@ const AiPlanner = () => {
                           transition={{ duration: 0.35 }}
                         >
                           <div className="day__number">{day.id}</div>
+
                           <div>
                             <h4>{day.title}</h4>
                             <p>{day.content}</p>
