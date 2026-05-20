@@ -33,31 +33,6 @@ const currencyOptions = [
   { code: "CHF", label: "CHF CHF" },
 ];
 
-const destinationCurrencyMap = {
-  india: "INR",
-  delhi: "INR",
-  manali: "INR",
-  goa: "INR",
-  mumbai: "INR",
-  jaipur: "INR",
-  paris: "EUR",
-  france: "EUR",
-  germany: "EUR",
-  italy: "EUR",
-  spain: "EUR",
-  london: "GBP",
-  england: "GBP",
-  uk: "GBP",
-  usa: "USD",
-  america: "USD",
-  "new york": "USD",
-  japan: "JPY",
-  tokyo: "JPY",
-  australia: "AUD",
-  canada: "CAD",
-  switzerland: "CHF",
-};
-
 const interestSuggestions = [
   "Adventure",
   "Food",
@@ -153,15 +128,6 @@ const fallbackImages = [
     description: "Discover memorable places during your trip.",
   },
 ];
-
-const getDestinationCurrency = (destination) => {
-  const value = destination.toLowerCase();
-  const matchedKey = Object.keys(destinationCurrencyMap).find((key) =>
-    value.includes(key)
-  );
-
-  return matchedKey ? destinationCurrencyMap[matchedKey] : "USD";
-};
 
 const getDestinationImages = (destination) => {
   const value = destination.toLowerCase();
@@ -354,6 +320,9 @@ const getToken = () => {
 const AiPlanner = () => {
   const [formData, setFormData] = useState({
     destination: "",
+    country: "",
+    state: "",
+    city: "",
     days: "",
     budget: "",
     currency: "INR",
@@ -369,14 +338,25 @@ const AiPlanner = () => {
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
 
+  const fullDestination = useMemo(() => {
+    return [
+      formData.destination,
+      formData.city,
+      formData.state,
+      formData.country,
+    ]
+      .filter(Boolean)
+      .join(", ");
+  }, [formData.destination, formData.city, formData.state, formData.country]);
+
   const { days: itineraryDays, extra } = useMemo(
     () => splitItineraryIntoSections(itinerary),
     [itinerary]
   );
 
   const destinationImages = useMemo(
-    () => getDestinationImages(formData.destination),
-    [formData.destination]
+    () => getDestinationImages(fullDestination || formData.destination),
+    [fullDestination, formData.destination]
   );
 
   const finalBudget = convertedBudget
@@ -420,6 +400,22 @@ const AiPlanner = () => {
     }));
   };
 
+  const getDestinationCurrency = async (country) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/location/currency`, {
+        params: { country },
+      });
+
+      return response.data?.data?.currency || formData.currency;
+    } catch (error) {
+      console.error("Destination currency error:", error);
+      toast.warning(
+        "Could not detect destination currency. Using selected currency."
+      );
+      return formData.currency;
+    }
+  };
+
   const addInterest = (interest) => {
     setFormData((prev) => {
       const current = prev.interests.trim();
@@ -437,7 +433,10 @@ const AiPlanner = () => {
 
   const fillSampleTrip = () => {
     setFormData({
-      destination: "Manali",
+      destination: "Mall Road",
+      country: "India",
+      state: "Himachal Pradesh",
+      city: "Manali",
       days: "3",
       budget: "15000",
       currency: "INR",
@@ -449,6 +448,16 @@ const AiPlanner = () => {
   };
 
   const validateForm = () => {
+    if (!formData.destination.trim()) {
+      toast.error("Please enter destination.");
+      return false;
+    }
+
+    if (!formData.country.trim()) {
+      toast.error("Please enter country.");
+      return false;
+    }
+
     if (Number(formData.days) < 1 || Number(formData.days) > 15) {
       toast.error("Please enter trip duration between 1 and 15 days.");
       return false;
@@ -495,6 +504,16 @@ const AiPlanner = () => {
         throw new Error("Invalid budget amount.");
       }
 
+      if (fromCurrency === toCurrency) {
+        return {
+          amount: numericAmount,
+          from: fromCurrency,
+          to: toCurrency,
+          rate: 1,
+          converted: false,
+        };
+      }
+
       const response = await axios.get(`${BASE_URL}/currency/convert`, {
         params: {
           amount: numericAmount,
@@ -531,7 +550,9 @@ const AiPlanner = () => {
     setWeather(null);
 
     try {
-      const destinationCurrency = getDestinationCurrency(formData.destination);
+      const destinationCurrency = await getDestinationCurrency(
+        formData.country
+      );
 
       const conversion = await convertCurrency(
         formData.budget,
@@ -541,10 +562,11 @@ const AiPlanner = () => {
 
       setConvertedBudget(conversion);
 
-      await fetchWeather(formData.destination);
+      await fetchWeather(fullDestination);
 
       const payload = {
         ...formData,
+        destination: fullDestination,
         destinationCurrency,
         originalBudget: `${formData.budget} ${formData.currency}`,
         convertedBudget: `${conversion.amount.toFixed(2)} ${conversion.to}`,
@@ -572,7 +594,10 @@ const AiPlanner = () => {
 
   const createTripPayload = (id = null) => ({
     id,
-    destination: formData.destination,
+    destination: fullDestination,
+    country: formData.country,
+    state: formData.state,
+    city: formData.city,
     days: formData.days,
     budget: finalBudget,
     travelers: formData.travelers,
@@ -596,7 +621,10 @@ const AiPlanner = () => {
       }
 
       const payload = {
-        destination: formData.destination,
+        destination: fullDestination,
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
         days: Number(formData.days),
         budget: finalBudget,
         travelers: Number(formData.travelers),
@@ -614,7 +642,7 @@ const AiPlanner = () => {
 
       console.log("SAVE RESPONSE:", response.data);
 
-      toast.success("Itinerary saved to MongoDB!");
+      toast.success("Itinerary Saved!");
     } catch (error) {
       console.error("SAVE ITINERARY ERROR:", error);
       toast.error(error.response?.data?.message || "Failed to save itinerary");
@@ -700,7 +728,7 @@ const AiPlanner = () => {
 
     y = 45;
 
-    addText(`Destination: ${formData.destination}`, 12, true);
+    addText(`Destination: ${fullDestination}`, 12, true);
     addText(`Days: ${formData.days}`, 11);
     addText(`Travelers: ${formData.travelers}`, 11);
     addText(`Budget: ${finalBudget}`, 11);
@@ -736,9 +764,10 @@ const AiPlanner = () => {
                   <span className="ai__badge">AI Powered Trip Builder</span>
                   <h2>Build a personalized travel plan in seconds</h2>
                   <p>
-                    Enter your destination, budget, travelers, and interests.
-                    Our AI will create a practical day-wise travel plan with
-                    food, activities, tips, weather, maps, and cost estimates.
+                    Enter your destination, country, budget, travelers, and
+                    interests. Our AI will create a practical day-wise travel
+                    plan with food, activities, tips, weather, maps, and cost
+                    estimates.
                   </p>
                 </div>
 
@@ -750,10 +779,50 @@ const AiPlanner = () => {
                         <input
                           type="text"
                           name="destination"
-                          placeholder="Example: Paris, Manali, Goa"
+                          placeholder="Example: Mall Road, Eiffel Tower, Local Market"
                           value={formData.destination}
                           onChange={handleChange}
                           required
+                        />
+                      </FormGroup>
+                    </Col>
+
+                    <Col md="4">
+                      <FormGroup>
+                        <label>Country</label>
+                        <input
+                          type="text"
+                          name="country"
+                          placeholder="Example: India"
+                          value={formData.country}
+                          onChange={handleChange}
+                          required
+                        />
+                      </FormGroup>
+                    </Col>
+
+                    <Col md="4">
+                      <FormGroup>
+                        <label>State / Region</label>
+                        <input
+                          type="text"
+                          name="state"
+                          placeholder="Example: Himachal Pradesh"
+                          value={formData.state}
+                          onChange={handleChange}
+                        />
+                      </FormGroup>
+                    </Col>
+
+                    <Col md="4">
+                      <FormGroup>
+                        <label>City</label>
+                        <input
+                          type="text"
+                          name="city"
+                          placeholder="Example: Shimla"
+                          value={formData.city}
+                          onChange={handleChange}
                         />
                       </FormGroup>
                     </Col>
@@ -935,7 +1004,7 @@ const AiPlanner = () => {
                   <div className="ai__result-header">
                     <div>
                       <span className="ai__badge">Generated Plan</span>
-                      <h3>{formData.destination} Travel Itinerary</h3>
+                      <h3>{fullDestination} Travel Itinerary</h3>
                       <p>
                         {formData.days} days • {formData.travelers} travelers •{" "}
                         {finalBudget}
@@ -1033,7 +1102,7 @@ const AiPlanner = () => {
                     </div>
                   )}
 
-                  <AIMap destination={formData.destination} />
+                  <AIMap destination={fullDestination} />
 
                   <div className="landmark__section">
                     <h4>Visual Trip Inspiration</h4>
