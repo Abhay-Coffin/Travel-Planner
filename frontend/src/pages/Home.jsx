@@ -18,9 +18,11 @@ import NebulaBackground from "../Components/AnimatedBackground/NebulaBackground"
 
 import Contact from "./Contact";
 
-const worldImg = "https://cdn-icons-png.flaticon.com/512/814/814513.png";
+const worldImg =
+  "https://cdn-icons-png.flaticon.com/512/814/814513.png";
 
-const experienceImage = "https://cdn-icons-png.flaticon.com/512/201/201623.png";
+const experienceImage =
+  "https://cdn-icons-png.flaticon.com/512/201/201623.png";
 
 const Home = () => {
   return (
@@ -74,6 +76,7 @@ const Home = () => {
               >
                 <div className="nebula__glass-card">
                   <h3>AI Powered Trip Planning</h3>
+
                   <p>
                     Generate smart itineraries, explore tours, check weather and
                     book your journey from one place.
@@ -113,6 +116,88 @@ const Home = () => {
         </Container>
       </section>
 
+      <section className="ai__features-section">
+        <Container>
+          <Row className="mb-5">
+            <Col lg="12">
+              <motion.div
+                className="text-center"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <Subtitle subtitle="Why Choose Our AI Planner" />
+
+                <h2 className="ai__features-title">
+                  Smarter Travel Planning Powered By AI
+                </h2>
+
+                <p className="ai__features-desc">
+                  Generate intelligent itineraries with live weather,
+                  interactive maps, budget analytics, nearby attractions,
+                  packing suggestions, and shareable travel plans.
+                </p>
+              </motion.div>
+            </Col>
+          </Row>
+
+          <Row>
+            {[
+              {
+                icon: "ri-robot-2-line",
+                title: "AI Trip Generation",
+                desc: "Generate day-wise intelligent itineraries in seconds.",
+              },
+              {
+                icon: "ri-map-pin-2-line",
+                title: "Interactive Maps",
+                desc: "Explore destinations with live maps and nearby places.",
+              },
+              {
+                icon: "ri-cloudy-line",
+                title: "Live Weather",
+                desc: "Get real-time weather forecasts for your destination.",
+              },
+              {
+                icon: "ri-funds-box-line",
+                title: "Budget Analytics",
+                desc: "Visualize travel expenses with smart cost estimation.",
+              },
+              {
+                icon: "ri-share-forward-line",
+                title: "Public Sharing",
+                desc: "Share your AI-generated trips with a public link.",
+              },
+              {
+                icon: "ri-shield-check-line",
+                title: "Travel Safety",
+                desc: "Receive destination safety and travel insights.",
+              },
+            ].map((feature, index) => (
+              <Col lg="4" md="6" className="mb-4" key={index}>
+                <motion.div
+                  className="ai__feature-card"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -8 }}
+                  transition={{ duration: 0.35 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="ai__feature-icon">
+                    <i className={feature.icon}></i>
+                  </div>
+
+                  <h4>{feature.title}</h4>
+
+                  <p>{feature.desc}</p>
+                </motion.div>
+              </Col>
+            ))}
+          </Row>
+        </Container>
+      </section>
+
       <section>
         <Container>
           <Row>
@@ -125,7 +210,9 @@ const Home = () => {
               >
                 <h5 className="services__subtitle">What We Serve</h5>
 
-                <h2 className="services__title">We Offer Our Best Services</h2>
+                <h2 className="services__title">
+                  We Offer Our Best Services
+                </h2>
               </motion.div>
             </Col>
           </Row>
@@ -146,7 +233,9 @@ const Home = () => {
               >
                 <Subtitle subtitle="Explore" />
 
-                <h2 className="featured__tour-title">Our Featured Tours</h2>
+                <h2 className="featured__tour-title">
+                  Our Featured Tours
+                </h2>
               </motion.div>
             </Col>
 
