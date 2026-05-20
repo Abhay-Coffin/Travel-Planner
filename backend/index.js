@@ -28,6 +28,7 @@ import currencyRoute from "./router/currency.js";
 import locationRoute from "./router/location.js";
 import locationSearchRoute from "./router/locationSearch.js";
 import nearbyPlacesRoute from "./router/nearbyPlaces.js";
+import adminRoute from "./router/admin.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -153,6 +154,7 @@ app.use("/api/v1/currency", currencyRoute);
 app.use("/api/v1/location", locationRoute);
 app.use("/api/v1/location", locationSearchRoute);
 app.use("/api/v1/location/nearby", nearbyPlacesRoute);
+app.use("/api/v1/admin", adminRoute);
 
 
 app.use("/api/v1/payment", paymentRoute);
