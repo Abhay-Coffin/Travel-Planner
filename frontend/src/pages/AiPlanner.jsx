@@ -45,99 +45,6 @@ const interestSuggestions = [
   "Family friendly",
 ];
 
-const destinationImageMap = {
-  manali: [
-    {
-      title: "Solang Valley",
-      image:
-        "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=900&q=80",
-      description: "Adventure activities, mountain views, and snow experiences.",
-    },
-    {
-      title: "Hadimba Devi Temple",
-      image:
-        "https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=900&q=80",
-      description: "A peaceful temple surrounded by cedar forest.",
-    },
-    {
-      title: "Old Manali",
-      image:
-        "https://images.unsplash.com/photo-1593181629936-11c609b8db9b?auto=format&fit=crop&w=900&q=80",
-      description: "Cafes, local markets, backpacker vibe, and riverside walks.",
-    },
-  ],
-  goa: [
-    {
-      title: "Baga Beach",
-      image:
-        "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=900&q=80",
-      description: "Popular beach for nightlife, water sports, and cafes.",
-    },
-    {
-      title: "Fort Aguada",
-      image:
-        "https://images.unsplash.com/photo-1560179406-1c6c60e0dc76?auto=format&fit=crop&w=900&q=80",
-      description: "Historic sea-facing fort with scenic views.",
-    },
-    {
-      title: "Palolem Beach",
-      image:
-        "https://images.unsplash.com/photo-1587922546307-776227941871?auto=format&fit=crop&w=900&q=80",
-      description: "Calm beach ideal for relaxing and kayaking.",
-    },
-  ],
-  paris: [
-    {
-      title: "Eiffel Tower",
-      image:
-        "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?auto=format&fit=crop&w=900&q=80",
-      description: "Iconic landmark and must-visit viewpoint.",
-    },
-    {
-      title: "Louvre Museum",
-      image:
-        "https://images.unsplash.com/photo-1565099824688-e93eb20fe622?auto=format&fit=crop&w=900&q=80",
-      description: "World-famous museum with art, history, and architecture.",
-    },
-    {
-      title: "Montmartre",
-      image:
-        "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=900&q=80",
-      description: "Charming streets, cafes, artists, and city views.",
-    },
-  ],
-};
-
-const fallbackImages = [
-  {
-    title: "Popular Landmark",
-    image:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
-    description: "Explore famous tourist attractions and scenic locations.",
-  },
-  {
-    title: "Local Experience",
-    image:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80",
-    description: "Enjoy food, culture, markets, and local experiences.",
-  },
-  {
-    title: "Travel Inspiration",
-    image:
-      "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=900&q=80",
-    description: "Discover memorable places during your trip.",
-  },
-];
-
-const getDestinationImages = (destination) => {
-  const value = destination.toLowerCase();
-  const matchedKey = Object.keys(destinationImageMap).find((key) =>
-    value.includes(key)
-  );
-
-  return matchedKey ? destinationImageMap[matchedKey] : fallbackImages;
-};
-
 const splitItineraryIntoSections = (text) => {
   if (!text) return { days: [], extra: "" };
 
@@ -341,6 +248,9 @@ const AiPlanner = () => {
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
 
+  const [nearbyPlaces, setNearbyPlaces] = useState([]);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+
   const fullDestination = useMemo(() => {
     return [formData.destination, formData.state, formData.country]
       .filter(Boolean)
@@ -350,11 +260,6 @@ const AiPlanner = () => {
   const { days: itineraryDays, extra } = useMemo(
     () => splitItineraryIntoSections(itinerary),
     [itinerary]
-  );
-
-  const destinationImages = useMemo(
-    () => getDestinationImages(fullDestination || formData.destination),
-    [fullDestination, formData.destination]
   );
 
   const finalBudget = convertedBudget
@@ -503,6 +408,7 @@ const AiPlanner = () => {
 
     setCountryOptions(["India"]);
     setStateOptions(["Himachal Pradesh"]);
+    setNearbyPlaces([]);
 
     toast.info("Sample trip filled!");
   };
@@ -553,6 +459,24 @@ const AiPlanner = () => {
       toast.warning("Weather data not available for this destination.");
     } finally {
       setWeatherLoading(false);
+    }
+  };
+
+  const fetchNearbyPlaces = async (destination) => {
+    try {
+      setNearbyLoading(true);
+      setNearbyPlaces([]);
+
+      const response = await axios.get(`${BASE_URL}/location/nearby`, {
+        params: { destination },
+      });
+
+      setNearbyPlaces(response.data?.data?.places || []);
+    } catch (error) {
+      console.error("Nearby places error:", error);
+      toast.warning("Nearby places could not be loaded.");
+    } finally {
+      setNearbyLoading(false);
     }
   };
 
@@ -608,6 +532,7 @@ const AiPlanner = () => {
     setItinerary("");
     setConvertedBudget(null);
     setWeather(null);
+    setNearbyPlaces([]);
 
     try {
       const destinationCurrency = await getDestinationCurrency(
@@ -623,6 +548,7 @@ const AiPlanner = () => {
       setConvertedBudget(conversion);
 
       await fetchWeather(fullDestination);
+      await fetchNearbyPlaces(fullDestination);
 
       const payload = {
         ...formData,
@@ -707,29 +633,57 @@ const AiPlanner = () => {
     }
   };
 
-  const shareItinerary = async () => {
-    if (!itinerary) return;
-
-    const id = `trip-${Date.now()}`;
-    const sharedTrip = createTripPayload(id);
-
-    const existingTrips =
-      JSON.parse(localStorage.getItem("sharedItineraries")) || [];
-
-    localStorage.setItem(
-      "sharedItineraries",
-      JSON.stringify([sharedTrip, ...existingTrips])
-    );
-
-    const shareUrl = `${window.location.origin}/share-itinerary/${id}`;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Share link copied!");
-    } catch {
-      toast.info("Share link created!");
+const shareItinerary = async () => {
+  try {
+    if (!itinerary) {
+      toast.error("No itinerary to share");
+      return;
     }
-  };
+
+    const token = getToken();
+
+    if (!token) {
+      toast.error("Please login first");
+      return;
+    }
+
+    const payload = {
+      destination: fullDestination,
+      country: formData.country,
+      state: formData.state,
+      days: Number(formData.days),
+      budget: finalBudget,
+      travelers: Number(formData.travelers),
+      interests: formData.interests,
+      itinerary,
+      isPublic: true,
+    };
+
+    const response = await axios.post(`${BASE_URL}/itineraries`, payload, {
+      withCredentials: true,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const shareId = response.data?.data?.shareId;
+
+    if (!shareId) {
+      toast.error("Share link could not be created");
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}/shared/${shareId}`;
+
+    await navigator.clipboard.writeText(shareUrl);
+
+    toast.success("Public share link copied!");
+  } catch (error) {
+    console.error("SHARE ITINERARY ERROR:", error);
+    toast.error(error.response?.data?.message || "Failed to create share link");
+  }
+};
+  
 
   const copyItinerary = async () => {
     if (!itinerary) return;
@@ -1160,31 +1114,43 @@ const AiPlanner = () => {
                   <AIMap destination={fullDestination} />
 
                   <div className="landmark__section">
-                    <h4>Visual Trip Inspiration</h4>
+                    <h4>Live Places Near Your Destination</h4>
                     <p>
-                      Famous attractions and travel highlights related to your
-                      destination.
+                      Real-time attractions, cafes, restaurants, and landmarks
+                      fetched from online map data.
                     </p>
 
-                    <div className="landmark__grid">
-                      {destinationImages.map((item, index) => (
-                        <motion.div
-                          className="landmark__card"
-                          key={`${item.title}-${index}`}
-                          initial={{ opacity: 0, y: 25 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.35 }}
-                        >
-                          <img src={item.image} alt={item.title} />
-
-                          <div>
-                            <h5>{item.title}</h5>
-                            <p>{item.description}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                    {nearbyLoading ? (
+                      <div className="ai__error">Loading nearby places...</div>
+                    ) : nearbyPlaces.length > 0 ? (
+                      <div className="landmark__grid">
+                        {nearbyPlaces.map((place) => (
+                          <motion.div
+                            className="landmark__card"
+                            key={place.id}
+                            initial={{ opacity: 0, y: 25 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.35 }}
+                          >
+                            <div className="live__place-card">
+                              <span className="ai__badge">{place.type}</span>
+                              <h5>{place.name}</h5>
+                              <p>{place.description}</p>
+                              <small>
+                                Lat: {Number(place.lat).toFixed(4)}, Lng:{" "}
+                                {Number(place.lng).toFixed(4)}
+                              </small>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="ai__error">
+                        No live places found. Try adding country/state for better
+                        accuracy.
+                      </div>
+                    )}
                   </div>
 
                   <div className="trip__intelligence">

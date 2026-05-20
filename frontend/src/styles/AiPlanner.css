@@ -877,3 +877,24 @@
   color: #fff;
   border-color: #333;
 }
+
+.live__place-card {
+  padding: 1.2rem;
+  min-height: 210px;
+}
+
+.live__place-card h5 {
+  color: var(--heading-color);
+  font-weight: 800;
+  margin: 0.8rem 0 0.5rem;
+}
+
+.live__place-card p {
+  color: var(--text-color);
+  line-height: 1.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.live__place-card small {
+  color: var(--text-color);
+}
