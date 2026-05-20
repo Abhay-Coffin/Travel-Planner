@@ -268,7 +268,6 @@ const AiPlanner = () => {
     fetchConversations();
   }, []);
 
-  // RESTORE STATE ON REFRESH
   useEffect(() => {
     try {
       const savedState = localStorage.getItem("aiPlannerState");
@@ -277,18 +276,46 @@ const AiPlanner = () => {
 
       const parsed = JSON.parse(savedState);
 
-      if (parsed.itinerary) setItinerary(parsed.itinerary);
       if (parsed.formData) setFormData(parsed.formData);
+      if (parsed.itinerary) setItinerary(parsed.itinerary);
       if (parsed.convertedBudget) setConvertedBudget(parsed.convertedBudget);
       if (parsed.weather) setWeather(parsed.weather);
       if (parsed.nearbyPlaces) setNearbyPlaces(parsed.nearbyPlaces);
       if (parsed.chatMessages) setChatMessages(parsed.chatMessages);
-      if (parsed.conversations) setConversations(parsed.conversations);
-      if (parsed.activeConversationId) setActiveConversationId(parsed.activeConversationId);
+      if (parsed.activeConversationId) {
+        setActiveConversationId(parsed.activeConversationId);
+      }
     } catch (error) {
-      console.error("RESTORE STATE ERROR:", error);
+      console.error("RESTORE AI PLANNER STATE ERROR:", error);
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "aiPlannerState",
+        JSON.stringify({
+          formData,
+          itinerary,
+          convertedBudget,
+          weather,
+          nearbyPlaces,
+          chatMessages,
+          activeConversationId,
+        })
+      );
+    } catch (error) {
+      console.error("SAVE AI PLANNER STATE ERROR:", error);
+    }
+  }, [
+    formData,
+    itinerary,
+    convertedBudget,
+    weather,
+    nearbyPlaces,
+    chatMessages,
+    activeConversationId,
+  ]);
 
   const fullDestination = useMemo(() => {
     return [formData.destination, formData.state, formData.country]
@@ -649,70 +676,6 @@ const AiPlanner = () => {
         converted: false,
       };
     }
-  };
-
-  // PLANNER SAVER 
-  const savePlannerState = (data = {}) => {
-    try {
-      localStorage.setItem(
-        "aiPlannerState",
-        JSON.stringify({
-          itinerary,
-          formData,
-          convertedBudget,
-          weather,
-          nearbyPlaces,
-          chatMessages,
-          conversations,
-          activeConversationId,
-          ...data,
-        })
-      );
-    } catch (error) {
-      console.error("SAVE PLANNER STATE ERROR:", error);
-    }
-  };
-
-  // AUTO SAVE ON CHANGES
-  useEffect(() => {
-    savePlannerState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    itinerary,
-    formData,
-    convertedBudget,
-    weather,
-    nearbyPlaces,
-    chatMessages,
-    conversations,
-    activeConversationId,
-  ]);
-
-  const resetPlanner = () => {
-    localStorage.removeItem("aiPlannerState");
-    setFormData({
-      destination: "",
-      country: "",
-      state: "",
-      days: "",
-      budget: "",
-      currency: "INR",
-      travelers: "",
-      interests: "",
-    });
-    setItinerary("");
-    setConvertedBudget(null);
-    setWeather(null);
-    setNearbyPlaces([]);
-    setChatMessages([
-      {
-        role: "assistant",
-        content:
-          "Hi! I can improve your itinerary, suggest hotels, reduce budget, add activities, and answer travel questions.",
-      },
-    ]);
-    setActiveConversationId(null);
-    toast.info("Planner reset to fresh state.");
   };
 
   const generateItinerary = async (e) => {
@@ -1095,6 +1058,36 @@ If needed, suggest improvements to the itinerary.
     toast.success("PDF itinerary downloaded!");
   };
 
+  const resetPlannerState = () => {
+    localStorage.removeItem("aiPlannerState");
+
+    setFormData({
+      destination: "",
+      country: "",
+      state: "",
+      days: "",
+      budget: "",
+      currency: "INR",
+      travelers: "",
+      interests: "",
+    });
+
+    setItinerary("");
+    setConvertedBudget(null);
+    setWeather(null);
+    setNearbyPlaces([]);
+    setActiveConversationId(null);
+    setChatMessages([
+      {
+        role: "assistant",
+        content:
+          "Hi! I can improve your itinerary, suggest hotels, reduce budget, add activities, and answer travel questions.",
+      },
+    ]);
+
+    toast.success("Planner reset!");
+  };
+
   return (
     <>
       <CommonSection title="AI Itinerary Generator" />
@@ -1276,14 +1269,12 @@ If needed, suggest improvements to the itinerary.
                     >
                       Fill Sample
                     </Button>
-                    
+
                     <Button
                       type="button"
-                      color="danger"
-                      className="btn sample__btn"
-                      onClick={resetPlanner}
+                      className="btn secondary__btn sample__btn"
+                      onClick={resetPlannerState}
                       disabled={loading}
-                      style={{marginLeft: "10px", padding: "10px 20px"}}
                     >
                       Reset Planner
                     </Button>
