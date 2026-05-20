@@ -4,11 +4,24 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 import BackButton from "../Components/common/BackButton";
 import { BASE_URL } from "../utils/config";
 
 import "../styles/AdminDashboard.css";
+
+const CHART_COLORS = ["#faa935", "#ff7e01", "#22c55e", "#3b82f6", "#a855f7"];
 
 const getToken = () => {
   try {
@@ -26,6 +39,22 @@ const getToken = () => {
   }
 };
 
+const monthNames = [
+  "",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
 
@@ -35,12 +64,6 @@ const AdminDashboard = () => {
   const fetchAdminStats = async () => {
     try {
       const token = getToken();
-
-      if (!token) {
-        toast.error("Please login as admin");
-        navigate("/login");
-        return;
-      }
 
       const res = await axios.get(`${BASE_URL}/admin/stats`, {
         withCredentials: true,
@@ -90,6 +113,19 @@ const AdminDashboard = () => {
     },
   ];
 
+  const bookingChartData =
+    statsData?.bookingsByMonth?.map((item) => ({
+      month: monthNames[item._id] || item._id,
+      bookings: item.bookings,
+      revenue: item.revenue,
+    })) || [];
+
+  const destinationChartData =
+    statsData?.popularDestinations?.map((item) => ({
+      name: item._id,
+      value: item.count,
+    })) || [];
+
   return (
     <section className="admin__dashboard">
       <Container>
@@ -124,6 +160,52 @@ const AdminDashboard = () => {
                   </motion.div>
                 </Col>
               ))}
+            </Row>
+
+            <Row className="mt-4">
+              <Col lg="8" className="mb-4">
+                <div className="admin__chart-box">
+                  <h4>Bookings & Revenue by Month</h4>
+
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={bookingChartData}>
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="bookings" name="Bookings" fill="#faa935" />
+                      <Bar dataKey="revenue" name="Revenue" fill="#ff7e01" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </Col>
+
+              <Col lg="4" className="mb-4">
+                <div className="admin__chart-box">
+                  <h4>Popular Destinations</h4>
+
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={destinationChartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={95}
+                        label
+                      >
+                        {destinationChartData.map((entry, index) => (
+                          <Cell
+                            key={entry.name}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </Col>
             </Row>
 
             <Row className="mt-4">

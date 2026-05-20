@@ -350,3 +350,19 @@
 .dark-theme .admin__itinerary-item.active {
   background: #2a2418;
 }
+.admin__chart-box {
+  padding: 1.5rem;
+  border-radius: 1.2rem;
+  background: #fff;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.07);
+}
+
+.admin__chart-box h4 {
+  color: var(--heading-color);
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.dark-theme .admin__chart-box {
+  background: #1e1e1e;
+}
