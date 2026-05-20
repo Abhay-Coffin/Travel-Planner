@@ -19,9 +19,7 @@ export const getNearbyPlaces = async (req, res) => {
     }
 
     const geoRes = await axios.get(
-      `https://api.maptiler.com/geocoding/${encodeURIComponent(
-        destination
-      )}.json`,
+      `https://api.maptiler.com/geocoding/${encodeURIComponent(destination)}.json`,
       {
         params: {
           key: process.env.MAPTILER_KEY,
@@ -33,7 +31,7 @@ export const getNearbyPlaces = async (req, res) => {
 
     const feature = geoRes.data?.features?.[0];
 
-    if (!feature) {
+    if (!feature?.center?.length) {
       return res.status(404).json({
         success: false,
         message: "Destination not found",
@@ -43,29 +41,41 @@ export const getNearbyPlaces = async (req, res) => {
     const [lng, lat] = feature.center;
 
     const overpassQuery = `
-      [out:json][timeout:15];
+      [out:json][timeout:25];
       (
-        node["tourism"](around:6000,${lat},${lng});
-        node["historic"](around:6000,${lat},${lng});
-        node["amenity"="restaurant"](around:6000,${lat},${lng});
-        node["amenity"="cafe"](around:6000,${lat},${lng});
-        node["leisure"](around:6000,${lat},${lng});
+        node["tourism"](around:8000,${lat},${lng});
+        node["historic"](around:8000,${lat},${lng});
+        node["amenity"="restaurant"](around:8000,${lat},${lng});
+        node["amenity"="cafe"](around:8000,${lat},${lng});
+        node["leisure"](around:8000,${lat},${lng});
       );
-      out center 30;
+      out body 25;
     `;
 
-    const placesRes = await axios.post(
+    const overpassUrls = [
       "https://overpass-api.de/api/interpreter",
-      overpassQuery,
-      {
-        headers: {
-          "Content-Type": "text/plain",
-        },
+      "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass.openstreetmap.ru/api/interpreter",
+    ];
+
+    let placesData = null;
+
+    for (const url of overpassUrls) {
+      try {
+        const placesRes = await axios.post(url, overpassQuery, {
+          headers: { "Content-Type": "text/plain" },
+          timeout: 30000,
+        });
+
+        placesData = placesRes.data;
+        break;
+      } catch (err) {
+        console.log(`Overpass failed: ${url}`);
       }
-    );
+    }
 
     const places =
-      placesRes.data?.elements
+      placesData?.elements
         ?.filter((item) => item.tags?.name && item.lat && item.lon)
         .slice(0, 12)
         .map((item) => ({
@@ -79,10 +89,16 @@ export const getNearbyPlaces = async (req, res) => {
             "Place",
           lat: item.lat,
           lng: item.lon,
-          description: `Popular ${item.tags.tourism || item.tags.amenity || item.tags.historic || item.tags.leisure || "place"} near ${destination}`,
+          description: `Popular ${
+            item.tags.tourism ||
+            item.tags.amenity ||
+            item.tags.historic ||
+            item.tags.leisure ||
+            "place"
+          } near ${destination}`,
         })) || [];
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         destination,
@@ -93,7 +109,7 @@ export const getNearbyPlaces = async (req, res) => {
   } catch (error) {
     console.error("NEARBY PLACES ERROR:", error.response?.data || error.message);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch nearby places",
       error: error.message,
