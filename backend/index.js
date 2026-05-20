@@ -25,6 +25,7 @@ import paymentRoute from "./router/payment.js";
 import weatherRoute from "./router/weather.js";
 import itineraryRoute from "./router/itinerary.js";
 import currencyRoute from "./router/currency.js";
+import locationRoute from "./router/location.js";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -147,6 +148,7 @@ app.use("/api/v1/ai", aiLimiter, aiRoute);
 app.use("/api/v1/chatbot", aiLimiter, chatbotRoute);
 app.use("/api/v1/itineraries", itineraryRoute);
 app.use("/api/v1/currency", currencyRoute);
+app.use("/api/v1/location", locationRoute);
 
 
 app.use("/api/v1/payment", paymentRoute);
