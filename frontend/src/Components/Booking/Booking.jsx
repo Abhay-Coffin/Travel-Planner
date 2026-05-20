@@ -49,6 +49,8 @@ const Booking = ({ tour, avgRating }) => {
     bookAt: "",
   });
 
+  const [paymentLoading, setPaymentLoading] = useState(false);
+
   const totalAmount =
     Number(price) * Number(booking.guestSize || 1) + serviceFee;
 
@@ -99,10 +101,13 @@ const Booking = ({ tour, avgRating }) => {
       return;
     }
 
+    setPaymentLoading(true);
+
     const scriptLoaded = await loadRazorpayScript();
 
     if (!scriptLoaded) {
       toast.error("Razorpay SDK failed to load");
+      setPaymentLoading(false);
       return;
     }
 
@@ -111,6 +116,9 @@ const Booking = ({ tour, avgRating }) => {
         method: "POST",
         headers: {
           "content-type": "application/json",
+          Authorization: `Bearer ${
+            localStorage.getItem("token") || user?.token || ""
+          }`,
         },
         credentials: "include",
         body: JSON.stringify({
@@ -145,6 +153,9 @@ const Booking = ({ tour, avgRating }) => {
               method: "POST",
               headers: {
                 "content-type": "application/json",
+                Authorization: `Bearer ${
+                  localStorage.getItem("token") || user?.token || ""
+                }`,
               },
               credentials: "include",
               body: JSON.stringify({
@@ -184,17 +195,30 @@ const Booking = ({ tour, avgRating }) => {
         theme: {
           color: "#faa935",
         },
+
+        modal: {
+          ondismiss: function () {
+            toast.info("Payment popup closed");
+          },
+        },
       };
 
       const paymentObject = new window.Razorpay(options);
 
-      paymentObject.on("payment.failed", function () {
-        toast.error("Payment failed. Please try again.");
+      paymentObject.on("payment.failed", function (response) {
+        console.log("PAYMENT FAILED:", response);
+
+        toast.error(
+          response.error?.description ||
+            "Payment failed. Please try again."
+        );
       });
 
       paymentObject.open();
     } catch (error) {
       toast.error(error.message || "Payment failed");
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -301,8 +325,19 @@ const Booking = ({ tour, avgRating }) => {
           </ListGroupItem>
         </ListGroup>
 
-        <Button className="btn primary__btn w-100 mt-4" onClick={handlePayment}>
-          Pay & Book Now
+        <Button
+          className="btn primary__btn w-100 mt-4"
+          onClick={handlePayment}
+          disabled={paymentLoading}
+        >
+          {paymentLoading ? (
+            <>
+              <i className="ri-loader-4-line spinning"></i>
+              Processing...
+            </>
+          ) : (
+            "Pay & Book Now"
+          )}
         </Button>
       </div>
     </div>

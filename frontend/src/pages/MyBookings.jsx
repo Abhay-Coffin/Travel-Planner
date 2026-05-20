@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Container, Row, Col, Button } from "reactstrap";
 import axios from "axios";
 import { toast } from "react-toastify";
+import jsPDF from "jspdf";
 
 import CommonSection from "../Shared/CommonSection";
 import Newsletter from "../Shared/Newsletter";
@@ -51,6 +52,7 @@ const MyBookings = () => {
 
   useEffect(() => {
     fetchBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const cancelBooking = async (id) => {
@@ -83,53 +85,67 @@ const MyBookings = () => {
   };
 
   const downloadInvoice = (booking) => {
-    const invoice = `
-TRAVEL WORLD - BOOKING INVOICE
+    const doc = new jsPDF("p", "mm", "a4");
 
-Invoice No: ${booking.invoiceNo}
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-Booking Status: ${booking.status}
-Payment Status: ${booking.paymentStatus}
+    doc.setFillColor(255, 247, 232);
+    doc.rect(0, 0, pageWidth, 40, "F");
 
-Tour Name: ${booking.tourName}
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("Travel World Invoice", 15, 20);
 
-Customer Name: ${booking.fullName}
-Email: ${booking.userEmail}
-Phone: ${booking.phone}
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text("Booking confirmation and payment invoice", 15, 30);
 
-Travel Date: ${new Date(booking.bookAt).toLocaleDateString()}
+    let y = 55;
 
-Guests: ${booking.guestSize}
+    const addRow = (label, value) => {
+      doc.setFont("helvetica", "bold");
+      doc.text(label, 15, y);
 
-Total Amount: ₹${booking.totalAmount}
+      doc.setFont("helvetica", "normal");
+      doc.text(String(value || "N/A"), 70, y);
 
-Created At:
-${new Date(booking.createdAt).toLocaleString()}
+      y += 10;
+    };
 
-Thank you for booking with Travel World.
-`;
+    addRow("Invoice No:", booking.invoiceNo);
+    addRow("Tour Name:", booking.tourName);
+    addRow("Customer:", booking.fullName);
+    addRow("Email:", booking.userEmail);
+    addRow("Phone:", booking.phone);
+    addRow("Travel Date:", new Date(booking.bookAt).toLocaleDateString());
+    addRow("Guests:", booking.guestSize);
+    addRow("Booking Status:", booking.status);
+    addRow("Payment Status:", booking.paymentStatus);
+    addRow("Payment ID:", booking.paymentId || "N/A");
+    addRow("Order ID:", booking.orderId || "N/A");
 
-    const blob = new Blob([invoice], {
-      type: "text/plain",
-    });
+    y += 8;
 
-    const url = URL.createObjectURL(blob);
+    doc.setFillColor(250, 169, 53);
+    doc.rect(15, y, pageWidth - 30, 18, "F");
 
-    const link = document.createElement("a");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text(`Total Amount: \u20B9${booking.totalAmount}`, 20, y + 12); // Used unicode for the Rupee symbol (₹) to avoid PDF encoding issues
 
-    link.href = url;
+    doc.setTextColor(0, 0, 0);
 
-    link.download = `${booking.invoiceNo || "invoice"}.txt`;
+    y += 35;
 
-    document.body.appendChild(link);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.text("Thank you for booking with Travel World.", 15, y);
+    doc.text("This is a system-generated invoice.", 15, y + 8);
 
-    link.click();
+    doc.save(`${booking.invoiceNo || "booking-invoice"}.pdf`);
 
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(url);
-
-    toast.success("Invoice downloaded");
+    toast.success("PDF invoice downloaded");
   };
 
   if (loading) {
