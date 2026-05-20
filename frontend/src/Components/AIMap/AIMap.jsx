@@ -54,7 +54,7 @@ const AIMap = ({ destination }) => {
         const geoRes = await fetch(
           `https://api.maptiler.com/geocoding/${encodeURIComponent(
             destination
-          )}.json?key=${maptilerKey}`
+          )}.json?key=${maptilerKey}&limit=1&language=en`
         );
 
         if (!geoRes.ok) {
@@ -62,13 +62,19 @@ const AIMap = ({ destination }) => {
         }
 
         const geoData = await geoRes.json();
+        const feature = geoData.features?.[0];
 
-        if (!geoData.features || geoData.features.length === 0) {
+        if (!feature?.center?.length) {
           console.warn("No location found for:", destination);
           return;
         }
 
-        const [lng, lat] = geoData.features[0].center;
+        const [lng, lat] = feature.center;
+
+        if (typeof lng !== "number" || typeof lat !== "number") {
+          console.warn("Invalid coordinates:", feature.center);
+          return;
+        }
 
         map.current.flyTo({
           center: [lng, lat],
@@ -86,61 +92,6 @@ const AIMap = ({ destination }) => {
           .addTo(map.current);
 
         markersRef.current.push(destinationMarker);
-
-        try {
-          const overpassQuery = `
-            [out:json][timeout:12];
-            (
-              node["tourism"](around:5000,${lat},${lng});
-              node["amenity"="restaurant"](around:5000,${lat},${lng});
-              node["amenity"="cafe"](around:5000,${lat},${lng});
-              node["historic"](around:5000,${lat},${lng});
-              node["leisure"](around:5000,${lat},${lng});
-            );
-            out center 20;
-          `;
-
-          const placesRes = await fetch(
-            "https://overpass-api.de/api/interpreter",
-            {
-              method: "POST",
-              body: overpassQuery,
-            }
-          );
-
-          if (!placesRes.ok) {
-            throw new Error("Nearby places API failed");
-          }
-
-          const placesData = await placesRes.json();
-
-          const places =
-            placesData.elements
-              ?.filter((item) => item.lat && item.lon && item.tags?.name)
-              .slice(0, 10) || [];
-
-          places.forEach((place) => {
-            const popupText =
-              place.tags.tourism ||
-              place.tags.amenity ||
-              place.tags.historic ||
-              place.tags.leisure ||
-              "Nearby place";
-
-            const marker = new maptilersdk.Marker({ color: "#ef4444" })
-              .setLngLat([place.lon, place.lat])
-              .setPopup(
-                new maptilersdk.Popup().setHTML(
-                  `<strong>${place.tags.name}</strong><br/>${popupText}`
-                )
-              )
-              .addTo(map.current);
-
-            markersRef.current.push(marker);
-          });
-        } catch (placesError) {
-          console.warn("Nearby places could not be loaded:", placesError);
-        }
       } catch (error) {
         console.error("MapTiler map loading failed:", error);
       } finally {
@@ -158,8 +109,8 @@ const AIMap = ({ destination }) => {
         <h4>{destination || "Destination"} Map Preview</h4>
         <p>
           {loading
-            ? "Loading live nearby places..."
-            : "Explore live nearby attractions, cafes, restaurants, and landmarks using MapTiler."}
+            ? "Loading destination map..."
+            : "Explore your selected destination on MapTiler."}
         </p>
       </div>
 
