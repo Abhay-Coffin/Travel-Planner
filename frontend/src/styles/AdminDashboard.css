@@ -366,3 +366,55 @@
 .dark-theme .admin__chart-box {
   background: #1e1e1e;
 }
+
+.admin__booking-table {
+  background: #fff;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.admin__booking-table th {
+  color: var(--heading-color);
+  white-space: nowrap;
+}
+
+.admin__booking-table td {
+  color: var(--text-color);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.admin__status-select {
+  border: none;
+  border-radius: 50px;
+  padding: 0.45rem 0.8rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.admin__status-select.confirmed,
+.admin__status-select.paid {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.admin__status-select.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin__status-select.cancelled,
+.admin__status-select.failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin__status-select.completed,
+.admin__status-select.refunded {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.dark-theme .admin__booking-table {
+  background: #1e1e1e;
+}
