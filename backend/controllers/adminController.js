@@ -29,6 +29,28 @@ export const getAdminStats = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(5);
 
+    const bookingsByMonth = await Booking.aggregate([
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          bookings: { $sum: 1 },
+          revenue: { $sum: { $toDouble: "$totalAmount" } },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const popularDestinations = await Itinerary.aggregate([
+      {
+        $group: {
+          _id: "$destination",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+    ]);
+
     res.status(200).json({
       success: true,
       data: {
@@ -40,6 +62,8 @@ export const getAdminStats = async (req, res) => {
         recentBookings,
         recentUsers,
         recentItineraries,
+        bookingsByMonth,
+        popularDestinations,
       },
     });
   } catch (error) {
