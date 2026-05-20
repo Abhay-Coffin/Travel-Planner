@@ -31,6 +31,10 @@ const AIMap = ({ destination }) => {
         center: [78.9629, 20.5937],
         zoom: 4,
       });
+
+      map.current.on("error", (e) => {
+  console.warn("MapTiler warning:", e?.error || e);
+});
     }
 
     return () => {
@@ -69,7 +73,17 @@ const AIMap = ({ destination }) => {
           return;
         }
 
-        const [lng, lat] = feature.center;
+      const [lng, lat] = feature.center || [];
+
+if (
+  typeof lng !== "number" ||
+  typeof lat !== "number" ||
+  Number.isNaN(lng) ||
+  Number.isNaN(lat)
+) {
+  console.warn("Invalid coordinates:", feature.center);
+  return;
+}
 
         if (typeof lng !== "number" || typeof lat !== "number") {
           console.warn("Invalid coordinates:", feature.center);
