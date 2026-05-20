@@ -704,8 +704,40 @@ const AiPlanner = () => {
     }
   };
 
+  const typeAssistantReply = (fullText) => {
+    let index = 0;
+
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: "",
+      },
+    ]);
+
+    const interval = setInterval(() => {
+      index += 2;
+
+      setChatMessages((prev) => {
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+
+        updated[lastIndex] = {
+          ...updated[lastIndex],
+          content: fullText.slice(0, index),
+        };
+
+        return updated;
+      });
+
+      if (index >= fullText.length) {
+        clearInterval(interval);
+      }
+    }, 15);
+  };
+
   const sendChatMessage = async () => {
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || chatLoading) return;
 
     const userMessage = {
       role: "user",
@@ -732,11 +764,18 @@ Interests: ${formData.interests}
 Current itinerary:
 ${itinerary}
 
+Recent conversation:
+${chatMessages
+  .slice(-6)
+  .map((msg) => `${msg.role}: ${msg.content}`)
+  .join("\n")}
+
 User request:
 ${currentInput}
 
 Act as an intelligent travel assistant.
-Reply conversationally and improve the itinerary when needed.
+Reply conversationally, clearly, and practically.
+If needed, suggest improvements to the itinerary.
 `;
 
       const response = await axios.post(`${BASE_URL}/chatbot/chat`, {
@@ -748,23 +787,11 @@ Reply conversationally and improve the itinerary when needed.
         response.data?.data ||
         "AI assistant could not respond.";
 
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: aiReply,
-        },
-      ]);
+      typeAssistantReply(aiReply);
     } catch (error) {
       console.error("AI CHAT ERROR:", error);
 
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Something went wrong while contacting AI assistant.",
-        },
-      ]);
+      typeAssistantReply("Something went wrong while contacting AI assistant.");
     } finally {
       setChatLoading(false);
     }
@@ -1262,10 +1289,16 @@ Reply conversationally and improve the itinerary when needed.
                         placeholder="Example: Add adventure activities under budget..."
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            sendChatMessage();
+                          }
+                        }}
                       />
 
-                      <button onClick={sendChatMessage}>
-                        <i className="ri-send-plane-fill"></i>
+                      <button onClick={sendChatMessage} disabled={chatLoading}>
+                        <i className={chatLoading ? "ri-loader-4-line" : "ri-send-plane-fill"}></i>
                       </button>
                     </div>
                   </div>
