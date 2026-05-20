@@ -17,7 +17,14 @@ export const createItinerary = async (req, res) => {
       isPublic,
     } = req.body;
 
-    if (!destination || !days || !budget || !travelers || !interests || !itinerary) {
+    if (
+      !destination ||
+      !days ||
+      !budget ||
+      !travelers ||
+      !interests ||
+      !itinerary
+    ) {
       return res.status(400).json({
         success: false,
         message: "All itinerary fields are required",
@@ -63,7 +70,9 @@ export const getMyItineraries = async (req, res) => {
       });
     }
 
-    const itineraries = await Itinerary.find({ userId }).sort({ createdAt: -1 });
+    const itineraries = await Itinerary.find({ userId }).sort({
+      createdAt: -1,
+    });
 
     res.status(200).json({
       success: true,
@@ -139,6 +148,55 @@ export const deleteItinerary = async (req, res) => {
     });
   } catch (error) {
     console.error("DELETE ITINERARY ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete itinerary",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllItinerariesForAdmin = async (req, res) => {
+  try {
+    const itineraries = await Itinerary.find()
+      .populate("userId", "username email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: itineraries,
+    });
+  } catch (error) {
+    console.error("ADMIN GET ITINERARIES ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch all itineraries",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteItineraryByAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const itinerary = await Itinerary.findByIdAndDelete(id);
+
+    if (!itinerary) {
+      return res.status(404).json({
+        success: false,
+        message: "Itinerary not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Itinerary deleted by admin",
+    });
+  } catch (error) {
+    console.error("ADMIN DELETE ITINERARY ERROR:", error);
 
     res.status(500).json({
       success: false,
