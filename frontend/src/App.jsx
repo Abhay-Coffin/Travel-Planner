@@ -5,11 +5,12 @@ import { ToastContainer } from "react-toastify";
 
 import PWAInstall from "./Components/PWAInstall/PWAInstall";
 
-
 function App() {
   return (
     <>
       <Layout />
+
+      <PWAInstall />
 
       <ToastContainer
         position="top-right"
@@ -21,9 +22,8 @@ function App() {
         draggable
         theme="colored"
       />
-    </> 
+    </>
   );
-  <PWAInstall />
 }
 
 export default App;
