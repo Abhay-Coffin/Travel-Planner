@@ -17,9 +17,6 @@ export const createPaymentOrder = async (req, res) => {
       });
     }
 
-    console.log("RAZORPAY KEY:", process.env.RAZORPAY_KEY_ID);
-    console.log("SECRET EXISTS:", !!process.env.RAZORPAY_KEY_SECRET);
-
     const {
       userId,
       userEmail,
@@ -67,8 +64,8 @@ export const createPaymentOrder = async (req, res) => {
       order,
       key: process.env.RAZORPAY_KEY_ID,
       bookingData: {
-        userId: userId || "",
-        userEmail: userEmail || "",
+        userId: userId || req.user?._id || "",
+        userEmail: userEmail || req.user?.email || "",
         tourName: tourName || "",
         tourId: tourId || "",
         fullName,
@@ -136,7 +133,7 @@ export const verifyPaymentAndCreateBooking = async (req, res) => {
       guestSize: Number(bookingData.guestSize),
       totalAmount: Number(bookingData.totalAmount),
       status: "confirmed",
-      invoiceNo: `INV-${Date.now()}`,
+      invoiceNo: `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       paymentStatus: "paid",

@@ -5,9 +5,22 @@ import {
   verifyPaymentAndCreateBooking,
 } from "../controllers/paymentController.js";
 
+import verifyToken from "../utils/verifyToken.js";
+
 const paymentRoute = express.Router();
 
-paymentRoute.post("/create-order", createPaymentOrder);
-paymentRoute.post("/verify", verifyPaymentAndCreateBooking);
+// Create Razorpay order
+paymentRoute.post(
+  "/create-order",
+  verifyToken,
+  createPaymentOrder
+);
+
+// Verify payment and create booking
+paymentRoute.post(
+  "/verify",
+  verifyToken,
+  verifyPaymentAndCreateBooking
+);
 
 export default paymentRoute;
