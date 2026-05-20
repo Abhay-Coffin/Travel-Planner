@@ -3,6 +3,8 @@ import Layout from "./Components/Layout/Layout";
 
 import { ToastContainer } from "react-toastify";
 
+import PWAInstall from "./Components/PWAInstall/PWAInstall";
+
 
 function App() {
   return (
@@ -19,8 +21,9 @@ function App() {
         draggable
         theme="colored"
       />
-    </>
+    </> 
   );
+  <PWAInstall />
 }
 
 export default App;
