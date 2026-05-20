@@ -322,13 +322,16 @@ const AiPlanner = () => {
     destination: "",
     country: "",
     state: "",
-    city: "",
     days: "",
     budget: "",
     currency: "INR",
     travelers: "",
     interests: "",
   });
+
+  const [locationOptions, setLocationOptions] = useState([]);
+  const [countryOptions, setCountryOptions] = useState([]);
+  const [stateOptions, setStateOptions] = useState([]);
 
   const [itinerary, setItinerary] = useState("");
   const [convertedBudget, setConvertedBudget] = useState(null);
@@ -339,15 +342,10 @@ const AiPlanner = () => {
   const [weatherLoading, setWeatherLoading] = useState(false);
 
   const fullDestination = useMemo(() => {
-    return [
-      formData.destination,
-      formData.city,
-      formData.state,
-      formData.country,
-    ]
+    return [formData.destination, formData.state, formData.country]
       .filter(Boolean)
       .join(", ");
-  }, [formData.destination, formData.city, formData.state, formData.country]);
+  }, [formData.destination, formData.state, formData.country]);
 
   const { days: itineraryDays, extra } = useMemo(
     () => splitItineraryIntoSections(itinerary),
@@ -393,6 +391,66 @@ const AiPlanner = () => {
     [itinerary]
   );
 
+  const searchDestination = async (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      destination: value,
+      country: "",
+      state: "",
+    }));
+
+    if (value.trim().length < 2) {
+      setLocationOptions([]);
+      setCountryOptions([]);
+      setStateOptions([]);
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${BASE_URL}/location/search`, {
+        params: { query: value },
+      });
+
+      const results = res.data?.data || [];
+      setLocationOptions(results);
+
+      const countries = [
+        ...new Set(results.map((item) => item.country).filter(Boolean)),
+      ];
+
+      setCountryOptions(countries);
+      setStateOptions([]);
+    } catch (error) {
+      console.error("Location search error:", error);
+    }
+  };
+
+  const handleCountrySelect = (country) => {
+    setFormData((prev) => ({
+      ...prev,
+      country,
+      state: "",
+    }));
+
+    const states = [
+      ...new Set(
+        locationOptions
+          .filter((item) => item.country === country)
+          .map((item) => item.state)
+          .filter(Boolean)
+      ),
+    ];
+
+    setStateOptions(states);
+  };
+
+  const handleStateSelect = (state) => {
+    setFormData((prev) => ({
+      ...prev,
+      state,
+    }));
+  };
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -436,13 +494,15 @@ const AiPlanner = () => {
       destination: "Mall Road",
       country: "India",
       state: "Himachal Pradesh",
-      city: "Manali",
       days: "3",
       budget: "15000",
       currency: "INR",
       travelers: "2",
       interests: "Adventure, nature, cafes, budget travel",
     });
+
+    setCountryOptions(["India"]);
+    setStateOptions(["Himachal Pradesh"]);
 
     toast.info("Sample trip filled!");
   };
@@ -454,7 +514,7 @@ const AiPlanner = () => {
     }
 
     if (!formData.country.trim()) {
-      toast.error("Please enter country.");
+      toast.error("Please select country.");
       return false;
     }
 
@@ -597,7 +657,6 @@ const AiPlanner = () => {
     destination: fullDestination,
     country: formData.country,
     state: formData.state,
-    city: formData.city,
     days: formData.days,
     budget: finalBudget,
     travelers: formData.travelers,
@@ -624,7 +683,6 @@ const AiPlanner = () => {
         destination: fullDestination,
         country: formData.country,
         state: formData.state,
-        city: formData.city,
         days: Number(formData.days),
         budget: finalBudget,
         travelers: Number(formData.travelers),
@@ -663,7 +721,7 @@ const AiPlanner = () => {
       JSON.stringify([sharedTrip, ...existingTrips])
     );
 
-    const shareUrl = `${window.location.origin}/shared/${shareId}`;
+    const shareUrl = `${window.location.origin}/share-itinerary/${id}`;
 
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -779,51 +837,48 @@ const AiPlanner = () => {
                         <input
                           type="text"
                           name="destination"
-                          placeholder="Example: Mall Road, Eiffel Tower, Local Market"
+                          placeholder="Example: Manali, Paris, New York"
                           value={formData.destination}
-                          onChange={handleChange}
+                          onChange={(e) => searchDestination(e.target.value)}
                           required
                         />
                       </FormGroup>
                     </Col>
 
-                    <Col md="4">
+                    <Col md="3">
                       <FormGroup>
                         <label>Country</label>
-                        <input
-                          type="text"
+                        <select
                           name="country"
-                          placeholder="Example: India"
                           value={formData.country}
-                          onChange={handleChange}
+                          onChange={(e) => handleCountrySelect(e.target.value)}
                           required
-                        />
+                        >
+                          <option value="">Select Country</option>
+                          {countryOptions.map((country) => (
+                            <option key={country} value={country}>
+                              {country}
+                            </option>
+                          ))}
+                        </select>
                       </FormGroup>
                     </Col>
 
-                    <Col md="4">
+                    <Col md="3">
                       <FormGroup>
                         <label>State / Region</label>
-                        <input
-                          type="text"
+                        <select
                           name="state"
-                          placeholder="Example: Himachal Pradesh"
                           value={formData.state}
-                          onChange={handleChange}
-                        />
-                      </FormGroup>
-                    </Col>
-
-                    <Col md="4">
-                      <FormGroup>
-                        <label>City</label>
-                        <input
-                          type="text"
-                          name="city"
-                          placeholder="Example: Shimla"
-                          value={formData.city}
-                          onChange={handleChange}
-                        />
+                          onChange={(e) => handleStateSelect(e.target.value)}
+                        >
+                          <option value="">Select State</option>
+                          {stateOptions.map((state) => (
+                            <option key={state} value={state}>
+                              {state}
+                            </option>
+                          ))}
+                        </select>
                       </FormGroup>
                     </Col>
 

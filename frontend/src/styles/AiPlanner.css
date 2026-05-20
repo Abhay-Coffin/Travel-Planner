@@ -854,3 +854,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ai__planner-card select {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.9rem;
+  outline: none;
+  color: var(--heading-color);
+  font-size: 1rem;
+  background: #fff;
+  transition: 0.3s ease;
+}
+
+.ai__planner-card select:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 4px rgba(250, 169, 53, 0.14);
+}
+
+.dark-theme .ai__planner-card select {
+  background: #2a2a2a;
+  color: #fff;
+  border-color: #333;
+}
