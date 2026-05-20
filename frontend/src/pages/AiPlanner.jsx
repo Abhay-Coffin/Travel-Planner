@@ -663,7 +663,7 @@ const AiPlanner = () => {
       JSON.stringify([sharedTrip, ...existingTrips])
     );
 
-    const shareUrl = `${window.location.origin}/share-itinerary/${id}`;
+    const shareUrl = `${window.location.origin}/shared/${shareId}`;
 
     try {
       await navigator.clipboard.writeText(shareUrl);
