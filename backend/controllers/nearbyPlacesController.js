@@ -31,7 +31,7 @@ export const getNearbyPlaces = async (req, res) => {
 
     const feature = geoRes.data?.features?.[0];
 
-    if (!feature?.center?.length) {
+    if (!feature?.center) {
       return res.status(404).json({
         success: false,
         message: "Destination not found",
@@ -43,18 +43,18 @@ export const getNearbyPlaces = async (req, res) => {
     const overpassQuery = `
       [out:json][timeout:25];
       (
-        node["tourism"](around:8000,${lat},${lng});
-        node["historic"](around:8000,${lat},${lng});
-        node["amenity"="restaurant"](around:8000,${lat},${lng});
-        node["amenity"="cafe"](around:8000,${lat},${lng});
-        node["leisure"](around:8000,${lat},${lng});
+        nwr["tourism"](around:10000,${lat},${lng});
+        nwr["historic"](around:10000,${lat},${lng});
+        nwr["amenity"="restaurant"](around:10000,${lat},${lng});
+        nwr["amenity"="cafe"](around:10000,${lat},${lng});
+        nwr["leisure"](around:10000,${lat},${lng});
       );
-      out body 25;
+      out center 40;
     `;
 
     const overpassUrls = [
-      "https://overpass-api.de/api/interpreter",
       "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass-api.de/api/interpreter",
       "https://overpass.openstreetmap.ru/api/interpreter",
     ];
 
@@ -62,41 +62,42 @@ export const getNearbyPlaces = async (req, res) => {
 
     for (const url of overpassUrls) {
       try {
-        const placesRes = await axios.post(url, overpassQuery, {
+        const response = await axios.post(url, overpassQuery, {
           headers: { "Content-Type": "text/plain" },
           timeout: 30000,
         });
 
-        placesData = placesRes.data;
+        placesData = response.data;
         break;
-      } catch (err) {
+      } catch (error) {
         console.log(`Overpass failed: ${url}`);
       }
     }
 
     const places =
       placesData?.elements
-        ?.filter((item) => item.tags?.name && item.lat && item.lon)
-        .slice(0, 12)
-        .map((item) => ({
-          id: item.id,
-          name: item.tags.name,
-          type:
-            item.tags.tourism ||
-            item.tags.historic ||
-            item.tags.amenity ||
-            item.tags.leisure ||
-            "Place",
-          lat: item.lat,
-          lng: item.lon,
-          description: `Popular ${
-            item.tags.tourism ||
-            item.tags.amenity ||
-            item.tags.historic ||
-            item.tags.leisure ||
-            "place"
-          } near ${destination}`,
-        })) || [];
+        ?.map((item) => {
+          const placeLat = item.lat || item.center?.lat;
+          const placeLng = item.lon || item.center?.lon;
+
+          if (!item.tags?.name || !placeLat || !placeLng) return null;
+
+          return {
+            id: item.id,
+            name: item.tags.name,
+            type:
+              item.tags.tourism ||
+              item.tags.historic ||
+              item.tags.amenity ||
+              item.tags.leisure ||
+              "Place",
+            lat: placeLat,
+            lng: placeLng,
+            description: `Popular place near ${destination}`,
+          };
+        })
+        .filter(Boolean)
+        .slice(0, 12) || [];
 
     return res.status(200).json({
       success: true,
