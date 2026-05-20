@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Button, Form, FormGroup } from "reactstrap";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -261,6 +261,35 @@ const AiPlanner = () => {
   const [isListening, setIsListening] = useState(false);
   const [nearbyLoading, setNearbyLoading] = useState(false);
 
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  // RESTORE STATE ON REFRESH
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem("aiPlannerState");
+
+      if (!savedState) return;
+
+      const parsed = JSON.parse(savedState);
+
+      if (parsed.itinerary) setItinerary(parsed.itinerary);
+      if (parsed.formData) setFormData(parsed.formData);
+      if (parsed.convertedBudget) setConvertedBudget(parsed.convertedBudget);
+      if (parsed.weather) setWeather(parsed.weather);
+      if (parsed.nearbyPlaces) setNearbyPlaces(parsed.nearbyPlaces);
+      if (parsed.chatMessages) setChatMessages(parsed.chatMessages);
+      if (parsed.conversations) setConversations(parsed.conversations);
+      if (parsed.activeConversationId) setActiveConversationId(parsed.activeConversationId);
+    } catch (error) {
+      console.error("RESTORE STATE ERROR:", error);
+    }
+  }, []);
+
   const fullDestination = useMemo(() => {
     return [formData.destination, formData.state, formData.country]
       .filter(Boolean)
@@ -305,6 +334,96 @@ const AiPlanner = () => {
     () => extractSmartRecommendations(itinerary),
     [itinerary]
   );
+
+  const fetchConversations = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const res = await axios.get(`${BASE_URL}/conversations`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
+
+      setConversations(res.data?.data || []);
+    } catch (error) {
+      console.error("FETCH CONVERSATIONS ERROR:", error);
+    }
+  };
+
+  const saveConversation = async (messagesToSave) => {
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const title = fullDestination || "Travel Planning Chat";
+
+      if (activeConversationId) {
+        await axios.put(
+          `${BASE_URL}/conversations/${activeConversationId}`,
+          {
+            title,
+            messages: messagesToSave,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          }
+        );
+      } else {
+        const res = await axios.post(
+          `${BASE_URL}/conversations`,
+          {
+            title,
+            messages: messagesToSave,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          }
+        );
+
+        setActiveConversationId(res.data?.data?._id);
+      }
+
+      fetchConversations();
+    } catch (error) {
+      console.error("SAVE CONVERSATION ERROR:", error);
+    }
+  };
+
+  const openConversation = (conversation) => {
+    setActiveConversationId(conversation._id);
+    setChatMessages(conversation.messages || []);
+  };
+
+  const deleteConversation = async (id) => {
+    try {
+      const token = getToken();
+
+      await axios.delete(`${BASE_URL}/conversations/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
+
+      setConversations((prev) => prev.filter((item) => item._id !== id));
+
+      if (activeConversationId === id) {
+        setActiveConversationId(null);
+        setChatMessages([
+          {
+            role: "assistant",
+            content:
+              "Hi! I can improve your itinerary, suggest hotels, reduce budget, add activities, and answer travel questions.",
+          },
+        ]);
+      }
+
+      toast.success("Conversation deleted");
+    } catch (error) {
+      toast.error("Failed to delete conversation");
+    }
+  };
 
   const searchDestination = async (value) => {
     setFormData((prev) => ({
@@ -530,6 +649,70 @@ const AiPlanner = () => {
         converted: false,
       };
     }
+  };
+
+  // PLANNER SAVER 
+  const savePlannerState = (data = {}) => {
+    try {
+      localStorage.setItem(
+        "aiPlannerState",
+        JSON.stringify({
+          itinerary,
+          formData,
+          convertedBudget,
+          weather,
+          nearbyPlaces,
+          chatMessages,
+          conversations,
+          activeConversationId,
+          ...data,
+        })
+      );
+    } catch (error) {
+      console.error("SAVE PLANNER STATE ERROR:", error);
+    }
+  };
+
+  // AUTO SAVE ON CHANGES
+  useEffect(() => {
+    savePlannerState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    itinerary,
+    formData,
+    convertedBudget,
+    weather,
+    nearbyPlaces,
+    chatMessages,
+    conversations,
+    activeConversationId,
+  ]);
+
+  const resetPlanner = () => {
+    localStorage.removeItem("aiPlannerState");
+    setFormData({
+      destination: "",
+      country: "",
+      state: "",
+      days: "",
+      budget: "",
+      currency: "INR",
+      travelers: "",
+      interests: "",
+    });
+    setItinerary("");
+    setConvertedBudget(null);
+    setWeather(null);
+    setNearbyPlaces([]);
+    setChatMessages([
+      {
+        role: "assistant",
+        content:
+          "Hi! I can improve your itinerary, suggest hotels, reduce budget, add activities, and answer travel questions.",
+      },
+    ]);
+    setActiveConversationId(null);
+    toast.info("Planner reset to fresh state.");
   };
 
   const generateItinerary = async (e) => {
@@ -816,8 +999,8 @@ If needed, suggest improvements to the itinerary.
 `;
 
       const response = await axios.post(`${BASE_URL}/chatbot`, {
-  message: prompt,
-});
+        message: prompt,
+      });
 
       const aiReply =
         response.data?.reply ||
@@ -826,7 +1009,17 @@ If needed, suggest improvements to the itinerary.
 
       typeAssistantReply(aiReply);
 
-      // Moved floating speech synthesis block inside the handler where aiReply exists natively.
+      const updatedMessages = [
+        ...chatMessages,
+        userMessage,
+        {
+          role: "assistant",
+          content: aiReply,
+        },
+      ];
+
+      saveConversation(updatedMessages);
+
       if (typeof window !== "undefined" && window.speechSynthesis) {
         const speech = new SpeechSynthesisUtterance(aiReply);
         speech.lang = "en-US";
@@ -1083,6 +1276,17 @@ If needed, suggest improvements to the itinerary.
                     >
                       Fill Sample
                     </Button>
+                    
+                    <Button
+                      type="button"
+                      color="danger"
+                      className="btn sample__btn"
+                      onClick={resetPlanner}
+                      disabled={loading}
+                      style={{marginLeft: "10px", padding: "10px 20px"}}
+                    >
+                      Reset Planner
+                    </Button>
 
                     <Button
                       type="submit"
@@ -1307,6 +1511,54 @@ If needed, suggest improvements to the itinerary.
                         recommendations, transport suggestions, couple
                         activities, hidden gems, and more.
                       </p>
+                    </div>
+
+                    <div className="ai__conversation-sidebar">
+                      <div className="conversation__header">
+                        <h5>Saved AI Chats</h5>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveConversationId(null);
+                            setChatMessages([
+                              {
+                                role: "assistant",
+                                content:
+                                  "Hi! I can improve your itinerary, suggest hotels, reduce budget, add activities, and answer travel questions.",
+                              },
+                            ]);
+                            localStorage.removeItem("aiPlannerState");
+                          }}
+                        >
+                          New Chat
+                        </button>
+                      </div>
+
+                      {conversations.length === 0 ? (
+                        <p className="conversation__empty">No saved chats yet.</p>
+                      ) : (
+                        conversations.map((conversation) => (
+                          <div
+                            key={conversation._id}
+                            className={`conversation__item ${
+                              activeConversationId === conversation._id ? "active" : ""
+                            }`}
+                          >
+                            <div onClick={() => openConversation(conversation)}>
+                              <strong>{conversation.title}</strong>
+                              <span>{conversation.messages?.length || 0} messages</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => deleteConversation(conversation._id)}
+                            >
+                              <i className="ri-delete-bin-line"></i>
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
 
                     <div className="ai__chat-messages">
