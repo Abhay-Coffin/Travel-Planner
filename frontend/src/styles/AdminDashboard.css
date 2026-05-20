@@ -292,3 +292,61 @@
 .dark-theme .admin__recent-item {
   border-bottom-color: #333;
 }
+
+.admin__itinerary-item {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid #eee;
+  margin-bottom: 0.8rem;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.admin__itinerary-item:hover,
+.admin__itinerary-item.active {
+  background: #fff7e8;
+  border-color: var(--secondary-color);
+}
+
+.admin__itinerary-item strong,
+.admin__itinerary-item span,
+.admin__itinerary-item small {
+  display: block;
+}
+
+.admin__itinerary-item strong {
+  color: var(--heading-color);
+  margin-bottom: 0.25rem;
+}
+
+.admin__itinerary-item span,
+.admin__itinerary-item small {
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.admin__status {
+  padding: 0.45rem 0.9rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.admin__status.public {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.admin__status.private {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.dark-theme .admin__itinerary-item {
+  border-color: #333;
+}
+
+.dark-theme .admin__itinerary-item:hover,
+.dark-theme .admin__itinerary-item.active {
+  background: #2a2418;
+}

@@ -26,6 +26,7 @@ import SharedItinerary from "../pages/SharedItinerary";
 import PublicItinerary from "../pages/PublicItinerary";
 
 import AdminDashboard from "../pages/AdminDashboard";
+import AdminItineraries from "../pages/AdminItineraries";
 import AdminTours from "../pages/AdminTours";
 import AdminBlogs from "../pages/AdminBlogs";
 import AdminBookings from "../pages/AdminBookings";
@@ -236,6 +237,15 @@ const Routers = () => {
               </PageWrapper>
             }
           />
+
+          <Route
+  path="/admin/itineraries"
+  element={
+    <PageWrapper>
+      <AdminItineraries />
+    </PageWrapper>
+  }
+/>
 
           <Route
             path="/admin/tours"
