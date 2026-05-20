@@ -2,6 +2,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import Booking from "../models/Booking.js";
 import Tour from "../models/Tour.js";
+import sendEmail from "../utils/sendEmail.js";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_missing",
@@ -140,6 +141,51 @@ export const verifyPaymentAndCreateBooking = async (req, res) => {
     });
 
     const savedBooking = await newBooking.save();
+
+    // Send Booking Confirmation Email
+    try {
+      await sendEmail({
+        to: bookingData.userEmail,
+        subject: "Travel World Booking Confirmed",
+        html: `
+          <div style="font-family: Arial; padding: 20px;">
+            <h2 style="color:#faa935;">
+              Booking Confirmed 🎉
+            </h2>
+
+            <p>
+              Hello ${bookingData.fullName},
+            </p>
+
+            <p>
+              Your booking for <strong>${bookingData.tourName}</strong> has been confirmed successfully.
+            </p>
+
+            <hr />
+
+            <p><strong>Invoice:</strong> ${newBooking.invoiceNo}</p>
+
+            <p><strong>Travel Date:</strong>
+            ${new Date(bookingData.bookAt).toLocaleDateString()}</p>
+
+            <p><strong>Guests:</strong> ${bookingData.guestSize}</p>
+
+            <p><strong>Total Paid:</strong> ₹${bookingData.totalAmount}</p>
+
+            <p><strong>Payment ID:</strong> ${razorpay_payment_id}</p>
+
+            <hr />
+
+            <p>
+              Thank you for booking with Travel World ❤️
+            </p>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("CONFIRMATION EMAIL FAILED:", emailError);
+      // We log it but do not fail the booking process, as payment & DB save were successful.
+    }
 
     res.status(201).json({
       success: true,
