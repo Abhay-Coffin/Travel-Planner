@@ -162,3 +162,12 @@ ul {
     font-size: 1.3rem;
   }
 }
+
+.page__loader {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--heading-color);
+}
