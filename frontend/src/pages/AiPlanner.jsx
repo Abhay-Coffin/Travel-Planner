@@ -258,6 +258,7 @@ const AiPlanner = () => {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [nearbyLoading, setNearbyLoading] = useState(false);
 
   const fullDestination = useMemo(() => {
@@ -736,6 +737,42 @@ const AiPlanner = () => {
     }, 15);
   };
 
+  const startVoiceInput = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      toast.error("Voice recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    setIsListening(true);
+
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+
+      setChatInput(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      toast.error("Voice recognition failed.");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+  };
+
   const sendChatMessage = async () => {
     if (!chatInput.trim() || chatLoading) return;
 
@@ -778,9 +815,9 @@ Reply conversationally, clearly, and practically.
 If needed, suggest improvements to the itinerary.
 `;
 
-      const response = await axios.post(`${BASE_URL}/chatbot/chat`, {
-        message: prompt,
-      });
+      const response = await axios.post(`${BASE_URL}/chatbot`, {
+  message: prompt,
+});
 
       const aiReply =
         response.data?.reply ||
@@ -788,9 +825,17 @@ If needed, suggest improvements to the itinerary.
         "AI assistant could not respond.";
 
       typeAssistantReply(aiReply);
+
+      // Moved floating speech synthesis block inside the handler where aiReply exists natively.
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        const speech = new SpeechSynthesisUtterance(aiReply);
+        speech.lang = "en-US";
+        speech.rate = 1;
+        window.speechSynthesis.speak(speech);
+      }
+
     } catch (error) {
       console.error("AI CHAT ERROR:", error);
-
       typeAssistantReply("Something went wrong while contacting AI assistant.");
     } finally {
       setChatLoading(false);
@@ -1296,6 +1341,14 @@ If needed, suggest improvements to the itinerary.
                           }
                         }}
                       />
+
+                      <button
+                        type="button"
+                        className={`voice__btn ${isListening ? "listening" : ""}`}
+                        onClick={startVoiceInput}
+                      >
+                        <i className="ri-mic-fill"></i>
+                      </button>
 
                       <button onClick={sendChatMessage} disabled={chatLoading}>
                         <i className={chatLoading ? "ri-loader-4-line" : "ri-send-plane-fill"}></i>

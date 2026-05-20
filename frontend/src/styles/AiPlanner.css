@@ -999,3 +999,31 @@
     transform: rotate(360deg);
   }
 }
+
+.voice__btn {
+  border: none;
+  width: 60px;
+  border-radius: 14px;
+  background: #111827;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.voice__btn.listening {
+  animation: pulse 1s infinite;
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
