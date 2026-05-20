@@ -226,14 +226,7 @@ const Routers = () => {
           />
           <Route path="/shared/:shareId" element={<PageWrapper><PublicItinerary /></PageWrapper>} />
 
-          <Route
-  path="/share-itinerary/:id"
-  element={
-    <PageWrapper>
-      <SharedItinerary />
-    </PageWrapper>
-  }
-/>
+          
 
           <Route
             path="/admin"

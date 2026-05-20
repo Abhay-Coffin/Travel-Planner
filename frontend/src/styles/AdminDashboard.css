@@ -242,3 +242,53 @@
   border-radius: 18px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
+
+.admin__loading {
+  padding: 2rem;
+  border-radius: 1rem;
+  background: #fff;
+  text-align: center;
+  font-weight: 700;
+  color: var(--heading-color);
+}
+
+.admin__recent-box {
+  padding: 1.5rem;
+  border-radius: 1.2rem;
+  background: #fff;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.07);
+}
+
+.admin__recent-box h4 {
+  color: var(--heading-color);
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.admin__recent-item {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.admin__recent-item:last-child {
+  border-bottom: none;
+}
+
+.admin__recent-item strong {
+  display: block;
+  color: var(--heading-color);
+}
+
+.admin__recent-item span {
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.dark-theme .admin__loading,
+.dark-theme .admin__recent-box {
+  background: #1e1e1e;
+}
+
+.dark-theme .admin__recent-item {
+  border-bottom-color: #333;
+}
