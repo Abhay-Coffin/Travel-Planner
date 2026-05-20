@@ -46,7 +46,7 @@ export const chatWithAssistant = async (req, res) => {
       });
     }
 
-    if (message.length > 1000) {
+    if (message.length > 8000) {
       return res.status(400).json({
         success: false,
         message: "Message is too long. Please keep it under 1000 characters.",
