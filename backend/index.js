@@ -30,10 +30,6 @@ import locationSearchRoute from "./router/locationSearch.js";
 import nearbyPlacesRoute from "./router/nearbyPlaces.js";
 import adminRoute from "./router/admin.js";
 
-import helmet from "helmet";
-import compression from "compression";
-import rateLimit from "express-rate-limit";
-import morgan from "morgan";
 
 const app = express();
 const port = process.env.PORT || 8000;
