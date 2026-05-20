@@ -5,16 +5,37 @@ import {
   getAllBookings,
   getUserBookings,
   cancelBooking,
+  updateBookingStatusByAdmin,
+  getBookingById,
 } from "../controllers/bookingController.js";
+
+import verifyToken, {
+  verifyAdmin,
+} from "../utils/verifyToken.js";
 
 const bookingRoute = express.Router();
 
-bookingRoute.post("/", createBooking);
+// Create booking
+bookingRoute.post("/", verifyToken, createBooking);
 
-bookingRoute.get("/", getAllBookings);
+// Get all bookings (admin only)
+bookingRoute.get("/", verifyToken, verifyAdmin, getAllBookings);
 
-bookingRoute.get("/user/:email", getUserBookings);
+// Get logged in user bookings
+bookingRoute.get("/my-bookings", verifyToken, getUserBookings);
 
-bookingRoute.put("/cancel/:id", cancelBooking);
+// Get single booking
+bookingRoute.get("/:id", verifyToken, getBookingById);
+
+// Cancel booking
+bookingRoute.put("/cancel/:id", verifyToken, cancelBooking);
+
+// Admin update booking
+bookingRoute.put(
+  "/admin/update/:id",
+  verifyToken,
+  verifyAdmin,
+  updateBookingStatusByAdmin
+);
 
 export default bookingRoute;

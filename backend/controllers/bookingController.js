@@ -1,6 +1,10 @@
 import Booking from "../models/Booking.js";
 import Tour from "../models/Tour.js";
 
+const generateInvoiceNo = () => {
+  return `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+};
+
 export const createBooking = async (req, res) => {
   try {
     const {
@@ -13,9 +17,10 @@ export const createBooking = async (req, res) => {
       guestSize,
       bookAt,
       totalAmount,
+      paymentId,
+      orderId,
+      paymentStatus,
     } = req.body;
-
-    console.log("BOOKING BODY:", req.body);
 
     if (!fullName || !phone || !guestSize || !bookAt) {
       return res.status(400).json({
@@ -24,8 +29,17 @@ export const createBooking = async (req, res) => {
       });
     }
 
+    if (Number(guestSize) < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Guest size must be at least 1",
+      });
+    }
+
+    let tour = null;
+
     if (tourId) {
-      const tour = await Tour.findById(tourId);
+      tour = await Tour.findById(tourId);
 
       if (tour && Number(guestSize) > Number(tour.maxGroupSize)) {
         return res.status(400).json({
@@ -36,17 +50,20 @@ export const createBooking = async (req, res) => {
     }
 
     const newBooking = new Booking({
-      userId: userId || "",
-      userEmail: userEmail || "guest@example.com",
-      tourName: tourName || "Unknown Tour",
-      tourId: tourId || "",
+      userId: userId || req.user?._id || null,
+      userEmail: userEmail || req.user?.email || "guest@example.com",
+      tourName: tourName || tour?.title || "Unknown Tour",
+      tourId: tourId || null,
       fullName,
       phone,
       guestSize: Number(guestSize),
       bookAt,
       totalAmount: Number(totalAmount) || 0,
       status: "confirmed",
-      invoiceNo: `INV-${Date.now()}`,
+      paymentStatus: paymentStatus || "pending",
+      paymentId: paymentId || "",
+      orderId: orderId || "",
+      invoiceNo: generateInvoiceNo(),
     });
 
     const savedBooking = await newBooking.save();
@@ -57,7 +74,7 @@ export const createBooking = async (req, res) => {
       data: savedBooking,
     });
   } catch (error) {
-    console.log("CREATE BOOKING ERROR:", error);
+    console.error("CREATE BOOKING ERROR:", error);
 
     res.status(500).json({
       success: false,
@@ -68,13 +85,19 @@ export const createBooking = async (req, res) => {
 
 export const getAllBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find().sort({ createdAt: -1 });
+    const bookings = await Booking.find()
+      .populate("userId", "username email")
+      .populate("tourId", "title photo price")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
+      count: bookings.length,
       data: bookings,
     });
   } catch (error) {
+    console.error("GET ALL BOOKINGS ERROR:", error);
+
     res.status(500).json({
       success: false,
       message: "Failed to fetch bookings",
@@ -84,17 +107,23 @@ export const getAllBookings = async (req, res) => {
 
 export const getUserBookings = async (req, res) => {
   try {
-    const { email } = req.params;
+    const userId = req.user?._id;
+    const email = req.user?.email || req.params.email;
 
-    const bookings = await Booking.find({ userEmail: email }).sort({
-      createdAt: -1,
-    });
+    const bookings = await Booking.find({
+      $or: [{ userId }, { userEmail: email }],
+    })
+      .populate("tourId", "title photo price city")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
+      count: bookings.length,
       data: bookings,
     });
   } catch (error) {
+    console.error("GET USER BOOKINGS ERROR:", error);
+
     res.status(500).json({
       success: false,
       message: "Failed to fetch user bookings",
@@ -105,12 +134,68 @@ export const getUserBookings = async (req, res) => {
 export const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;
+    const { reason } = req.body;
 
-    const booking = await Booking.findByIdAndUpdate(
-      id,
-      { status: "cancelled" },
-      { new: true }
-    );
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Booking is already cancelled",
+      });
+    }
+
+    booking.status = "cancelled";
+    booking.paymentStatus =
+      booking.paymentStatus === "paid" ? "refunded" : booking.paymentStatus;
+    booking.cancellationReason = reason || "Cancelled by user";
+    booking.cancelledAt = new Date();
+
+    const updatedBooking = await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Booking cancelled successfully",
+      data: updatedBooking,
+    });
+  } catch (error) {
+    console.error("CANCEL BOOKING ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to cancel booking",
+    });
+  }
+};
+
+export const updateBookingStatusByAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, paymentStatus } = req.body;
+
+    const allowedStatus = ["pending", "confirmed", "cancelled", "completed"];
+    const allowedPaymentStatus = ["pending", "paid", "failed", "refunded"];
+
+    const updateData = {};
+
+    if (status && allowedStatus.includes(status)) {
+      updateData.status = status;
+    }
+
+    if (paymentStatus && allowedPaymentStatus.includes(paymentStatus)) {
+      updateData.paymentStatus = paymentStatus;
+    }
+
+    const booking = await Booking.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!booking) {
       return res.status(404).json({
@@ -121,13 +206,42 @@ export const cancelBooking = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Booking cancelled successfully",
+      message: "Booking updated successfully",
       data: booking,
     });
   } catch (error) {
+    console.error("ADMIN UPDATE BOOKING ERROR:", error);
+
     res.status(500).json({
       success: false,
-      message: "Failed to cancel booking",
+      message: "Failed to update booking",
+    });
+  }
+};
+
+export const getBookingById = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("userId", "username email")
+      .populate("tourId", "title photo price city");
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: booking,
+    });
+  } catch (error) {
+    console.error("GET BOOKING BY ID ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch booking",
     });
   }
 };
