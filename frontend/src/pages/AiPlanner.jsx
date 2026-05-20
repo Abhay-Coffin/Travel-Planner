@@ -249,6 +249,15 @@ const AiPlanner = () => {
   const [weatherLoading, setWeatherLoading] = useState(false);
 
   const [nearbyPlaces, setNearbyPlaces] = useState([]);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Hi! I can improve your itinerary, suggest hotels, reduce budget, add activities, and answer travel questions.",
+    },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const [nearbyLoading, setNearbyLoading] = useState(false);
 
   const fullDestination = useMemo(() => {
@@ -535,9 +544,7 @@ const AiPlanner = () => {
     setNearbyPlaces([]);
 
     try {
-      const destinationCurrency = await getDestinationCurrency(
-        formData.country
-      );
+      const destinationCurrency = await getDestinationCurrency(formData.country);
 
       const conversion = await convertCurrency(
         formData.budget,
@@ -633,57 +640,58 @@ const AiPlanner = () => {
     }
   };
 
-const shareItinerary = async () => {
-  try {
-    if (!itinerary) {
-      toast.error("No itinerary to share");
-      return;
+  const shareItinerary = async () => {
+    try {
+      if (!itinerary) {
+        toast.error("No itinerary to share");
+        return;
+      }
+
+      const token = getToken();
+
+      if (!token) {
+        toast.error("Please login first");
+        return;
+      }
+
+      const payload = {
+        destination: fullDestination,
+        country: formData.country,
+        state: formData.state,
+        days: Number(formData.days),
+        budget: finalBudget,
+        travelers: Number(formData.travelers),
+        interests: formData.interests,
+        itinerary,
+        isPublic: true,
+      };
+
+      const response = await axios.post(`${BASE_URL}/itineraries`, payload, {
+        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const shareId = response.data?.data?.shareId;
+
+      if (!shareId) {
+        toast.error("Share link could not be created");
+        return;
+      }
+
+      const shareUrl = `${window.location.origin}/shared/${shareId}`;
+
+      await navigator.clipboard.writeText(shareUrl);
+
+      toast.success("Public share link copied!");
+    } catch (error) {
+      console.error("SHARE ITINERARY ERROR:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to create share link"
+      );
     }
-
-    const token = getToken();
-
-    if (!token) {
-      toast.error("Please login first");
-      return;
-    }
-
-    const payload = {
-      destination: fullDestination,
-      country: formData.country,
-      state: formData.state,
-      days: Number(formData.days),
-      budget: finalBudget,
-      travelers: Number(formData.travelers),
-      interests: formData.interests,
-      itinerary,
-      isPublic: true,
-    };
-
-    const response = await axios.post(`${BASE_URL}/itineraries`, payload, {
-      withCredentials: true,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const shareId = response.data?.data?.shareId;
-
-    if (!shareId) {
-      toast.error("Share link could not be created");
-      return;
-    }
-
-    const shareUrl = `${window.location.origin}/shared/${shareId}`;
-
-    await navigator.clipboard.writeText(shareUrl);
-
-    toast.success("Public share link copied!");
-  } catch (error) {
-    console.error("SHARE ITINERARY ERROR:", error);
-    toast.error(error.response?.data?.message || "Failed to create share link");
-  }
-};
-  
+  };
 
   const copyItinerary = async () => {
     if (!itinerary) return;
@@ -693,6 +701,72 @@ const shareItinerary = async () => {
       toast.success("Copied to clipboard!");
     } catch {
       toast.error("Copy failed. Please try again.");
+    }
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage = {
+      role: "user",
+      content: chatInput,
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+
+    const currentInput = chatInput;
+
+    setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const prompt = `
+Current trip details:
+
+Destination: ${fullDestination}
+Days: ${formData.days}
+Budget: ${finalBudget}
+Travelers: ${formData.travelers}
+Interests: ${formData.interests}
+
+Current itinerary:
+${itinerary}
+
+User request:
+${currentInput}
+
+Act as an intelligent travel assistant.
+Reply conversationally and improve the itinerary when needed.
+`;
+
+      const response = await axios.post(`${BASE_URL}/chatbot/chat`, {
+        message: prompt,
+      });
+
+      const aiReply =
+        response.data?.reply ||
+        response.data?.data ||
+        "AI assistant could not respond.";
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: aiReply,
+        },
+      ]);
+    } catch (error) {
+      console.error("AI CHAT ERROR:", error);
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Something went wrong while contacting AI assistant.",
+        },
+      ]);
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -983,16 +1057,15 @@ const shareItinerary = async () => {
                     <div>
                       <span>Planning Budget</span>
                       <strong>
-                        {convertedBudget.amount.toFixed(2)}{" "}
-                        {convertedBudget.to}
+                        {convertedBudget.amount.toFixed(2)} {convertedBudget.to}
                       </strong>
                     </div>
 
                     <div>
                       <span>Exchange Rate</span>
                       <strong>
-                        1 {convertedBudget.from} ={" "}
-                        {convertedBudget.rate.toFixed(4)} {convertedBudget.to}
+                        1 {convertedBudget.from} = {convertedBudget.rate.toFixed(4)}{" "}
+                        {convertedBudget.to}
                       </strong>
                     </div>
                   </div>
@@ -1056,8 +1129,7 @@ const shareItinerary = async () => {
                           <span className="ai__badge">Live Weather</span>
                           <h4>{weather.location?.name}</h4>
                           <p>
-                            {weather.location?.region},{" "}
-                            {weather.location?.country}
+                            {weather.location?.region}, {weather.location?.country}
                           </p>
                         </div>
 
@@ -1151,6 +1223,51 @@ const shareItinerary = async () => {
                         accuracy.
                       </div>
                     )}
+                  </div>
+
+                  <div className="ai__chat-section">
+                    <div className="ai__chat-header">
+                      <span className="ai__badge">AI Travel Assistant</span>
+                      <h4>Ask AI To Improve Your Trip</h4>
+
+                      <p>
+                        Ask for cheaper plans, luxury upgrades, food
+                        recommendations, transport suggestions, couple
+                        activities, hidden gems, and more.
+                      </p>
+                    </div>
+
+                    <div className="ai__chat-messages">
+                      {chatMessages.map((msg, index) => (
+                        <div
+                          key={index}
+                          className={`ai__chat-bubble ${
+                            msg.role === "user" ? "user" : "assistant"
+                          }`}
+                        >
+                          {msg.content}
+                        </div>
+                      ))}
+
+                      {chatLoading && (
+                        <div className="ai__chat-bubble assistant">
+                          AI is thinking...
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="ai__chat-input">
+                      <input
+                        type="text"
+                        placeholder="Example: Add adventure activities under budget..."
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                      />
+
+                      <button onClick={sendChatMessage}>
+                        <i className="ri-send-plane-fill"></i>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="trip__intelligence">
