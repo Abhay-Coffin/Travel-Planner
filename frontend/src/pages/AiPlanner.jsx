@@ -625,23 +625,46 @@ const AiPlanner = () => {
   };
 
   const fetchNearbyPlaces = async (destination) => {
-    try {
-      setNearbyLoading(true);
+  try {
+    setNearbyLoading(true);
+    setNearbyPlaces([]);
+
+    const geoRes = await axios.get(
+      `https://api.maptiler.com/geocoding/${encodeURIComponent(
+        destination
+      )}.json`,
+      {
+        params: {
+          key: import.meta.env.VITE_MAPTILER_KEY,
+          limit: 1,
+        },
+      }
+    );
+
+    const feature = geoRes.data?.features?.[0];
+
+    if (!feature?.center) {
       setNearbyPlaces([]);
-
-      const response = await axios.get(`${BASE_URL}/location/nearby`, {
-        params: {  lat,
-    lng, },
-      });
-
-      setNearbyPlaces(response.data?.data || []);
-    } catch (error) {
-      console.error("Nearby places error:", error);
-      toast.warning("Nearby places could not be loaded.");
-    } finally {
-      setNearbyLoading(false);
+      return;
     }
-  };
+
+    const [lng, lat] = feature.center;
+
+    const response = await axios.get(`${BASE_URL}/location/nearby`, {
+      params: {
+        lat,
+        lng,
+      },
+    });
+
+    setNearbyPlaces(response.data?.data || []);
+  } catch (error) {
+    console.error("Nearby places error:", error);
+    toast.warning("Nearby places could not be loaded.");
+  } finally {
+    setNearbyLoading(false);
+  }
+};
 
   const convertCurrency = async (amount, fromCurrency, toCurrency) => {
     try {
@@ -755,7 +778,7 @@ const AiPlanner = () => {
       const payload = {
         ...formData,
         destination: fullDestination,
-        destinationCurrencyCode,
+        destinationCurrency: destinationCurrencyCode,
         originalBudget: `${formData.budget} ${formData.currency}`,
         convertedBudget: `${conversion.amount.toFixed(2)} ${conversion.to}`,
         budget: `${conversion.amount.toFixed(2)} ${conversion.to}`,
