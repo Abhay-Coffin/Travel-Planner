@@ -264,6 +264,9 @@ const AiPlanner = () => {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
 
+  const [expensePrediction, setExpensePrediction] = useState(null);
+  const [expenseLoading, setExpenseLoading] = useState(false);
+
   useEffect(() => {
     fetchConversations();
   }, []);
@@ -282,6 +285,7 @@ const AiPlanner = () => {
       if (parsed.weather) setWeather(parsed.weather);
       if (parsed.nearbyPlaces) setNearbyPlaces(parsed.nearbyPlaces);
       if (parsed.chatMessages) setChatMessages(parsed.chatMessages);
+      if (parsed.expensePrediction) setExpensePrediction(parsed.expensePrediction);
       if (parsed.activeConversationId) {
         setActiveConversationId(parsed.activeConversationId);
       }
@@ -301,6 +305,7 @@ const AiPlanner = () => {
           weather,
           nearbyPlaces,
           chatMessages,
+          expensePrediction,
           activeConversationId,
         })
       );
@@ -314,6 +319,7 @@ const AiPlanner = () => {
     weather,
     nearbyPlaces,
     chatMessages,
+    expensePrediction,
     activeConversationId,
   ]);
 
@@ -678,6 +684,44 @@ const AiPlanner = () => {
     }
   };
 
+  const predictExpenses = async () => {
+    try {
+      setExpenseLoading(true);
+
+      const token = getToken() || "";
+
+      const response = await axios.post(
+        `${BASE_URL}/expense/predict`,
+        {
+          destination: formData.destination,
+          country: formData.country,
+          days: formData.days,
+          travelers: formData.travelers,
+          budget: formData.budget,
+          travelStyle: formData.travelStyle || "moderate",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        }
+      );
+
+      setExpensePrediction(response.data?.data);
+
+      toast.success("Expense prediction ready!");
+    } catch (error) {
+      console.log("EXPENSE PREDICTION ERROR:", error);
+
+      toast.error(
+        error.response?.data?.message || "Failed to predict expenses"
+      );
+    } finally {
+      setExpenseLoading(false);
+    }
+  };
+
   const generateItinerary = async (e) => {
     e.preventDefault();
 
@@ -689,6 +733,7 @@ const AiPlanner = () => {
     setConvertedBudget(null);
     setWeather(null);
     setNearbyPlaces([]);
+    setExpensePrediction(null);
 
     try {
       const destinationCurrency = await getDestinationCurrency(formData.country);
@@ -717,6 +762,8 @@ const AiPlanner = () => {
 
       setItinerary(response.data?.data || "No itinerary generated.");
       toast.success("AI itinerary generated!");
+
+      await predictExpenses();
     } catch (error) {
       console.error(error);
 
@@ -1076,6 +1123,7 @@ If needed, suggest improvements to the itinerary.
     setConvertedBudget(null);
     setWeather(null);
     setNearbyPlaces([]);
+    setExpensePrediction(null);
     setActiveConversationId(null);
     setChatMessages([
       {
@@ -1265,7 +1313,7 @@ If needed, suggest improvements to the itinerary.
                       type="button"
                       className="btn secondary__btn sample__btn"
                       onClick={fillSampleTrip}
-                      disabled={loading}
+                      disabled={loading || expenseLoading}
                     >
                       Fill Sample
                     </Button>
@@ -1274,7 +1322,7 @@ If needed, suggest improvements to the itinerary.
                       type="button"
                       className="btn secondary__btn sample__btn"
                       onClick={resetPlannerState}
-                      disabled={loading}
+                      disabled={loading || expenseLoading}
                     >
                       Reset Planner
                     </Button>
@@ -1282,9 +1330,9 @@ If needed, suggest improvements to the itinerary.
                     <Button
                       type="submit"
                       className="btn primary__btn ai__btn"
-                      disabled={loading}
+                      disabled={loading || expenseLoading}
                     >
-                      {loading ? "Generating..." : "Generate AI Itinerary"}
+                      {loading || expenseLoading ? "Generating..." : "Generate AI Itinerary"}
                     </Button>
                   </div>
                 </Form>
@@ -1292,7 +1340,7 @@ If needed, suggest improvements to the itinerary.
             </Col>
           </Row>
 
-          {loading && (
+          {(loading || expenseLoading) && (
             <div className="ai__loading">
               <Loader />
               <p>Creating your smart itinerary...</p>
@@ -1798,6 +1846,67 @@ If needed, suggest improvements to the itinerary.
                       </div>
 
                       <pre>{extra}</pre>
+                    </div>
+                  )}
+
+                  {expensePrediction && (
+                    <div className="expense__predictor">
+                      <div className="expense__header">
+                        <h3>AI Expense Prediction</h3>
+
+                        <span className={expensePrediction.budgetLevel}>
+                          {expensePrediction.budgetLevel}
+                        </span>
+                      </div>
+
+                      <div className="expense__grid">
+                        <div className="expense__card">
+                          <h5>Food</h5>
+                          <p>₹{expensePrediction.foodCost}</p>
+                        </div>
+
+                        <div className="expense__card">
+                          <h5>Transport</h5>
+                          <p>₹{expensePrediction.transportCost}</p>
+                        </div>
+
+                        <div className="expense__card">
+                          <h5>Hotel</h5>
+                          <p>₹{expensePrediction.hotelCost}</p>
+                        </div>
+
+                        <div className="expense__card">
+                          <h5>Activities</h5>
+                          <p>₹{expensePrediction.activityCost}</p>
+                        </div>
+
+                        <div className="expense__card">
+                          <h5>Hidden Costs</h5>
+                          <p>₹{expensePrediction.hiddenCosts}</p>
+                        </div>
+
+                        <div className="expense__card">
+                          <h5>Emergency Buffer</h5>
+                          <p>₹{expensePrediction.emergencyBuffer}</p>
+                        </div>
+                      </div>
+
+                      <div className="expense__recommended">
+                        <h4>
+                          Recommended Budget:
+                          ₹{expensePrediction.recommendedBudget}
+                        </h4>
+                      </div>
+
+                      <div className="expense__tips">
+                        <h5>AI Budget Tips</h5>
+
+                        <ul>
+                          {expensePrediction.tips?.map((tip, index) => (
+                            <li key={index}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   )}
 
