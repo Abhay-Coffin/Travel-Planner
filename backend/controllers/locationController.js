@@ -71,19 +71,7 @@ export const getNearbyPlaces = async (req, res) => {
     console.log("NEARBY QUERY:", req.query);
     console.log("LAT LNG:", lat, lng)
 
-    if (
-      Number.isNaN(lat) ||
-      Number.isNaN(lng) ||
-      lat < -90 ||
-      lat > 90 ||
-      lng < -180 ||
-      lng > 180
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Valid latitude and longitude are required",
-      });
-    }
+    
 
     const overpassQuery = `
 [out:json][timeout:25];
