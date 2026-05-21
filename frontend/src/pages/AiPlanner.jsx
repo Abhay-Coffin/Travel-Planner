@@ -283,7 +283,7 @@ const AiPlanner = () => {
       if (parsed.itinerary) setItinerary(parsed.itinerary);
       if (parsed.convertedBudget) setConvertedBudget(parsed.convertedBudget);
       if (parsed.weather) setWeather(parsed.weather);
-      if (parsed.nearbyPlaces) setNearbyPlaces(parsed.nearbyPlaces);
+      if (parsed.nearbyPlaces) setNearbyPlaces([]);
       if (parsed.chatMessages) setChatMessages(parsed.chatMessages);
       if (parsed.expensePrediction) setExpensePrediction(parsed.expensePrediction);
       if (parsed.activeConversationId) {
@@ -660,7 +660,9 @@ const AiPlanner = () => {
     setNearbyPlaces(response.data?.data || []);
   } catch (error) {
     console.error("Nearby places error:", error);
-    toast.warning("Nearby places could not be loaded.");
+    toast.warning(
+  error.response?.data?.message || "Nearby places could not be loaded."
+);
   } finally {
     setNearbyLoading(false);
   }
@@ -1133,6 +1135,8 @@ If needed, suggest improvements to the itinerary.
 
   const resetPlannerState = () => {
     localStorage.removeItem("aiPlannerState");
+    localStorage.removeItem("nearbyPlaces");
+    localStorage.removeItem("savedItineraries");
 
     setFormData({
       destination: "",
