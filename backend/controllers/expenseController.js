@@ -7,14 +7,8 @@ const groqClient = new OpenAI({
 
 export const predictExpenses = async (req, res) => {
   try {
-    const {
-      destination,
-      country,
-      days,
-      travelers,
-      budget,
-      travelStyle,
-    } = req.body;
+    const { destination, country, days, travelers, budget, travelStyle } =
+      req.body;
 
     if (!destination || !days || !travelers) {
       return res.status(400).json({
@@ -29,13 +23,13 @@ You are an AI travel financial planner.
 Predict realistic travel expenses for:
 
 Destination: ${destination}
-Country: ${country}
+Country: ${country || "Not specified"}
 Trip Duration: ${days} days
 Travelers: ${travelers}
 Current Budget: ${budget || "Not specified"}
 Travel Style: ${travelStyle || "moderate"}
 
-Return ONLY valid JSON.
+Return ONLY valid JSON. Do not include markdown, explanation, or code blocks.
 
 Required JSON format:
 
@@ -58,26 +52,35 @@ Required JSON format:
 
     const completion = await groqClient.chat.completions.create({
       model: "llama-3.3-70b-versatile",
-
       messages: [
         {
           role: "user",
           content: prompt,
         },
       ],
-
       temperature: 0.4,
       max_tokens: 700,
     });
 
-    const raw =
-      completion.choices?.[0]?.message?.content || "{}";
+    const raw = completion.choices?.[0]?.message?.content || "{}";
 
     let parsed;
 
     try {
-      parsed = JSON.parse(raw);
-    } catch {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+
+      if (!jsonMatch) {
+        return res.status(500).json({
+          success: false,
+          message: "AI returned invalid JSON",
+        });
+      }
+
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      console.error("JSON PARSE ERROR:", error);
+      console.error("RAW AI RESPONSE:", raw);
+
       return res.status(500).json({
         success: false,
         message: "AI returned invalid JSON",
