@@ -1199,3 +1199,71 @@
 .dark-theme .expense__card {
   background: #2a2418;
 }
+
+@media only screen and (max-width: 576px) {
+  .ai__chat-section {
+    padding: 1rem;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .ai__conversation-sidebar {
+    padding: 1rem;
+    border-radius: 18px;
+  }
+
+  .conversation__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .conversation__header h5 {
+    font-size: 1.3rem;
+    line-height: 1.4;
+  }
+
+  .conversation__header button {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 18px;
+  }
+
+  .ai__chat-messages {
+    max-height: 360px;
+    padding-right: 0;
+  }
+
+  .ai__chat-bubble {
+    max-width: 100%;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  .ai__chat-input {
+    display: grid;
+    grid-template-columns: 1fr 48px 48px;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .ai__chat-input input {
+    min-width: 0;
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 0.85rem;
+  }
+
+  .ai__chat-input button,
+  .voice__btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    padding: 0;
+  }
+
+  .trip__intelligence {
+    grid-template-columns: 1fr;
+  }
+}
