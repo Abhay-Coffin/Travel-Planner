@@ -30,6 +30,7 @@ import locationSearchRoute from "./router/locationSearch.js";
 import nearbyPlacesRoute from "./router/nearbyPlaces.js";
 import adminRoute from "./router/admin.js";
 import conversationRoute from "./router/conversation.js";
+import expenseRoute from "./router/expense.js";
 
 
 const app = express();
@@ -169,6 +170,7 @@ app.use("/api/v1/location", locationSearchRoute);
 app.use("/api/v1/location/nearby", nearbyPlacesRoute);
 app.use("/api/v1/admin", adminRoute);
 app.use("/api/v1/conversations", conversationRoute);
+app.use("/api/v1/expense", expenseRoute);
 
 
 app.use("/api/v1/payment", paymentRoute);
