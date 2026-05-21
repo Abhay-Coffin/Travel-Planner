@@ -27,7 +27,7 @@ const AIMap = ({ destination }) => {
     if (!map.current && mapContainer.current) {
       map.current = new maptilersdk.Map({
         container: mapContainer.current,
-        style: maptilersdk.MapStyle.STREETS,
+        style: `https://api.maptiler.com/maps/streets/style.json?key=${maptilerKey}`,
         center: [78.9629, 20.5937],
         zoom: 4,
       });
