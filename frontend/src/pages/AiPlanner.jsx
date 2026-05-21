@@ -630,10 +630,11 @@ const AiPlanner = () => {
       setNearbyPlaces([]);
 
       const response = await axios.get(`${BASE_URL}/location/nearby`, {
-        params: { destination },
+        params: {  lat,
+    lng, },
       });
 
-      setNearbyPlaces(response.data?.data?.places || []);
+      setNearbyPlaces(response.data?.data || []);
     } catch (error) {
       console.error("Nearby places error:", error);
       toast.warning("Nearby places could not be loaded.");
