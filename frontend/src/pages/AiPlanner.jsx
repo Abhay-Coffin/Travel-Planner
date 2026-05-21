@@ -737,11 +737,13 @@ const AiPlanner = () => {
 
     try {
       const destinationCurrency = await getDestinationCurrency(formData.country);
+      const destinationCurrencyCode =
+  destinationCurrency?.code || destinationCurrency;
 
       const conversion = await convertCurrency(
         formData.budget,
         formData.currency,
-        destinationCurrency
+        destinationCurrencyCode
       );
 
       setConvertedBudget(conversion);
@@ -752,7 +754,7 @@ const AiPlanner = () => {
       const payload = {
         ...formData,
         destination: fullDestination,
-        destinationCurrency,
+        destinationCurrencyCode,
         originalBudget: `${formData.budget} ${formData.currency}`,
         convertedBudget: `${conversion.amount.toFixed(2)} ${conversion.to}`,
         budget: `${conversion.amount.toFixed(2)} ${conversion.to}`,
