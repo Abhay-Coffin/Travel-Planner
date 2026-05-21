@@ -65,8 +65,11 @@ export const getCountryCurrency = async (req, res) => {
 
 export const getNearbyPlaces = async (req, res) => {
   try {
-    const lat = Number(req.query.lat);
-    const lng = Number(req.query.lng);
+    const lat = Number(req.query.lat || req.query.latitude);
+    const lng = Number(req.query.lng || req.query.longitude);
+
+    console.log("NEARBY QUERY:", req.query);
+    console.log("LAT LNG:", lat, lng)
 
     if (
       Number.isNaN(lat) ||
