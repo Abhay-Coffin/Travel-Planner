@@ -531,7 +531,7 @@ const AiPlanner = () => {
         params: { country },
       });
 
-      return response.data?.data?.currency || formData.currency;
+      return response.data?.data?.currency?.code || formData.currency;
     } catch (error) {
       console.error("Destination currency error:", error);
       toast.warning(
